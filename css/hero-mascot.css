@@ -4,11 +4,21 @@
  * One-time hero entrance animation for the Go Gopher mascot.
  * Completely separate from mascot.css — do not merge.
  * GPU-friendly: only transform + opacity are animated.
- * pointer-events: none throughout — never blocks clicks.
+ * pointer-events: none throughout — never blocks clicks or touch.
+ *
+ * WHAT CHANGED vs the original:
+ *  - Fixed px sizes replaced with clamp() for smooth 320px–1440px scaling.
+ *  - Mobile breakpoint no longer needed — clamp handles all sizes.
+ *  - overflow-x: clip on stage prevents any horizontal scrollbar.
+ *  - Safe-area insets on stage for notch devices.
+ *  - will-change removed from base; JS adds it only during animation.
+ *  - touch-action: auto ensures touch scroll is never blocked.
  */
 
-/* ── Reduced-motion: nothing is rendered ─────────────────────── */
-/* (JS also checks this before creating any element) */
+/* ── Reduced-motion: nothing is rendered ────────────────────────────
+   JS also checks this before creating any DOM elements.
+   Screen size / touch capability does NOT trigger this guard.         */
+
 @media (prefers-reduced-motion: reduce) {
   .hero-mascot-stage,
   .hero-mascot-img {
@@ -16,69 +26,64 @@
   }
 }
 
-/* ── Stage: full-width fixed strip, invisible to input ─────────── */
-/*
-  The stage is a thin fixed bar docked at the bottom of the viewport.
-  Its height is just enough to accommodate the gopher; overflow is
-  visible upward so the bounce arcs show above the bar naturally.
-  z-index 200 keeps it above page content but below any modal overlay.
-*/
+/* ── Stage: full-width fixed strip ──────────────────────────────────
+   height: 0 with overflow: visible lets arcs appear above the line.
+   overflow-x: clip (not hidden — hidden creates a new scroll container)
+   prevents the bouncing gopher from causing horizontal scrollbars.
+   z-index 200 is above page content.                                  */
+
 .hero-mascot-stage {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;           /* JS repositions this to align with hero border */
+  /* top/bottom set by JS to align with hero bottom border */
+  bottom: 0;
   height: 0;
   pointer-events: none;
+  touch-action: auto;
   z-index: 200;
   overflow: visible;
+  overflow-x: clip;          /* ← prevents horizontal scrollbar from bounce */
+
+  /* Safe-area padding so stage edges respect device notches */
+  padding-left:  env(safe-area-inset-left,  0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
-/* ── Pop-out clip wrapper ──────────────────────────────────────── */
-/*
-  Clips the gopher so only the part above the hero's border line
-  is ever visible during the pop-out phase.
-  After pop-out the JS switches to fixed positioning for the bounce.
-*/
+/* ── Pop-out clip wrapper ────────────────────────────────────────────
+   Clips the gopher below the hero border during the pop-out phase.
+   JS repositions left to center it under the hero.
+   Replaced fixed 120×130px with clamp().                             */
+
 .hero-mascot-clip {
   position: absolute;
   bottom: 0;
-  left: 50%;               /* JS overrides left to centre under hero */
+  left: 50%;
   transform: translateX(-50%);
-  width: 120px;
-  height: 130px;
-  overflow: hidden;        /* the "burrow" clip */
+  width:  clamp(72px,  16vw, 130px);
+  height: clamp(80px,  18vw, 140px);
+  overflow: hidden;           /* the "burrow" clip */
   pointer-events: none;
+  touch-action: auto;
 }
 
-/* ── The gopher image itself ───────────────────────────────────── */
+/* ── The gopher image ───────────────────────────────────────────────
+   mix-blend-mode: multiply blends JPEG white bg into cream page.
+   Swap in a transparent PNG and remove mix-blend-mode for a crisper look.
+   Width uses clamp() — no separate mobile breakpoint required.       */
+
 .hero-mascot-img {
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 100px;            /* desktop default */
+  width: clamp(56px, 13vw, 110px);
   height: auto;
   pointer-events: none;
+  touch-action: auto;
   user-select: none;
   -webkit-user-drag: none;
-
-  /*
-    mix-blend-mode: multiply blends the JPEG white background into
-    the warm-cream page (#f5f2e9 / ivory), making it look cut-out.
-    If you later swap in a transparent PNG, remove this property.
-  */
   mix-blend-mode: multiply;
 
-  will-change: transform, opacity;
-}
-
-/* ── Mobile: smaller gopher ────────────────────────────────────── */
-@media (max-width: 599px) {
-  .hero-mascot-clip {
-    width: 80px;
-    height: 90px;
-  }
-  .hero-mascot-img {
-    width: 64px;
-  }
+  /* will-change applied by JS only during each animation phase,
+     then removed to free compositor resources.                       */
 }
