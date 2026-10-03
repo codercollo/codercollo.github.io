@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="API Design — Engineering Notes by Collins Kimani." />
+  <title>API Design — Collins Kimani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { ivory:'#f5f2e9',charcoal:'#252525',muted:'#666666',divider:'#d6d0c5',link:'#0000cc',visited:'#551a8b',rust:'#8b3a0f' }, fontFamily: { serif:['Georgia','Times New Roman','serif'], sans:['system-ui','-apple-system','Segoe UI','sans-serif'], mono:['"Courier New"','Courier','monospace'] } } }
+    }
+  </script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+
+    <nav class="site-nav" aria-label="Site navigation">
+      <ul>
+        <li><a href="../index.html" class="site-nav__link">Home</a></li>
+        <li><a href="../index.html#projects" class="site-nav__link">Projects</a></li>
+        <li><a href="../engineering-notes.html" class="site-nav__link site-nav__link--active">Engineering Notes</a></li>
+        <li><a href="../writing.html" class="site-nav__link">Writing</a></li>
+        <li><a href="../about.html" class="site-nav__link">About</a></li>
+      </ul>
+    </nav>
+
+    <div class="note-header">
+      <a href="../engineering-notes.html" class="note-header__back">← Engineering Notes</a>
+      <h1 class="note-header__title">API Design</h1>
+      <p class="note-header__meta">API and Service Design · last updated Oct 2026</p>
+    </div>
+
+    <main id="main">
+      <article class="note-body">
+
+        <h2>Concept</h2>
+        <p>
+          An API is a contract. It defines what a service accepts, what it returns, and
+          what errors it produces. Good API design means that contract is consistent,
+          predictable, and explicit — so that clients can rely on it without reading
+          the implementation.
+        </p>
+        <p>
+          This note focuses on HTTP REST APIs, which is the style I use in Simple Bank,
+          GoTP, and the URL Shortener.
+        </p>
+
+        <h2>Problem</h2>
+        <p>
+          A poorly designed API creates friction for everyone who uses it. Error responses
+          that are inconsistent or uninformative make debugging difficult. Endpoints that
+          behave differently in edge cases are unpredictable. An API that leaks implementation
+          details couples clients to internals they shouldn't know about.
+        </p>
+        <p>
+          The cost of a bad API design compounds over time. If clients depend on inconsistent
+          behaviour, you can't fix it without breaking them.
+        </p>
+
+        <h2>How it works</h2>
+        <p>
+          A few principles I find useful:
+        </p>
+        <p>
+          <strong>Use HTTP semantics correctly.</strong> GET requests should not have side
+          effects. POST creates resources. PUT replaces. PATCH modifies partially. DELETE removes.
+          Using these correctly gives clients and infrastructure predictable behaviour —
+          caches know GET responses can be cached, for example.
+        </p>
+        <p>
+          <strong>Be consistent with resource naming.</strong> Plural nouns for collections
+          (<code>/accounts</code>), singular identifiers for specific resources
+          (<code>/accounts/123</code>). Avoid verbs in endpoints — the HTTP method already
+          expresses the action.
+        </p>
+        <p>
+          <strong>Use HTTP status codes accurately.</strong>
+          <code>200</code> for success, <code>201</code> for created, <code>400</code> for
+          invalid input, <code>401</code> for unauthenticated, <code>403</code> for unauthorized,
+          <code>404</code> for not found, <code>409</code> for conflicts, <code>500</code> for
+          unexpected server errors. Clients use these codes to handle responses programmatically.
+        </p>
+        <p>
+          <strong>Return consistent error responses.</strong> Every error should have the same
+          shape, so clients have one code path for handling them. A useful structure:
+        </p>
+        <pre><code>{
+  "error": "account_not_found",
+  "message": "No account with ID 123 exists."
+}</code></pre>
+        <p>
+          <strong>Validate at the boundary.</strong> Validate all input as early as possible,
+          before it enters the system. Return a <code>400</code> with a clear message describing
+          what is wrong. Don't let invalid data propagate inward.
+        </p>
+
+        <h2>Trade-offs</h2>
+        <p>
+          Strict REST semantics can become awkward for operations that don't map cleanly
+          to CRUD. A bank transfer isn't simply creating a resource — it's an operation
+          with side effects on multiple resources. Some designs use action-oriented endpoints
+          (e.g., <code>POST /accounts/123/transfer</code>) when a pure resource model
+          doesn't fit.
+        </p>
+        <p>
+          Being too permissive with input makes validation harder. Being too strict
+          makes the API fragile. The balance is to validate what matters for correctness
+          and security, and be lenient about things that don't.
+        </p>
+
+        <h2>Practical application</h2>
+        <p>
+          In Simple Bank, every handler validates input using the
+          <code>gin</code> binding tags, which map directly to request validation.
+          Errors from validation produce a <code>400</code> response with a structured
+          error body. The handler only proceeds if validation passes.
+        </p>
+        <p>
+          In GoTP, the API must be careful about what it exposes in error responses.
+          Telling a caller "that phone number doesn't exist in our system" leaks
+          information. Instead, error messages are intentionally generic for authentication
+          and OTP endpoints.
+        </p>
+
+        <h2>My understanding</h2>
+        <p>
+          The most important thing I've learned about API design is that consistency
+          matters more than cleverness. An API that behaves the same way in every case —
+          same error format, same status code conventions, same naming patterns — is far
+          easier to work with than one that has "better" behaviour in some cases but
+          surprises you in others.
+        </p>
+        <p>
+          Design the API from the consumer's perspective first. What does the caller need?
+          What information do they need in an error? What should be transparent and what
+          should be an implementation detail?
+        </p>
+
+      </article>
+    </main>
+
+    <div class="mt-10 pt-5 border-t border-divider text-sm">
+      <a href="../engineering-notes.html" class="site-link">← Back to Engineering Notes</a>
+    </div>
+    <footer class="mt-8 pt-4 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between gap-2">
+      <p>© 2026 Collins Kimani.</p>
+      <a href="#" class="site-link text-xs">↑ back to top</a>
+    </footer>
+  </div>
+  <script src="../js/main.js"></script>
+</body>
+</html>

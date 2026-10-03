@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Graceful Shutdown — Engineering Notes by Collins Kimani." />
+  <title>Graceful Shutdown — Collins Kimani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { ivory:'#f5f2e9',charcoal:'#252525',muted:'#666666',divider:'#d6d0c5',link:'#0000cc',visited:'#551a8b',rust:'#8b3a0f' }, fontFamily: { serif:['Georgia','Times New Roman','serif'], sans:['system-ui','-apple-system','Segoe UI','sans-serif'], mono:['"Courier New"','Courier','monospace'] } } }
+    }
+  </script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+
+    <nav class="site-nav" aria-label="Site navigation">
+      <ul>
+        <li><a href="../index.html" class="site-nav__link">Home</a></li>
+        <li><a href="../index.html#projects" class="site-nav__link">Projects</a></li>
+        <li><a href="../engineering-notes.html" class="site-nav__link site-nav__link--active">Engineering Notes</a></li>
+        <li><a href="../writing.html" class="site-nav__link">Writing</a></li>
+        <li><a href="../about.html" class="site-nav__link">About</a></li>
+      </ul>
+    </nav>
+
+    <div class="note-header">
+      <a href="../engineering-notes.html" class="note-header__back">← Engineering Notes</a>
+      <h1 class="note-header__title">Graceful Shutdown</h1>
+      <p class="note-header__meta">Go and Backend Engineering · last updated Oct 2026</p>
+    </div>
+
+    <main id="main">
+      <article class="note-body">
+
+        <h2>Concept</h2>
+        <p>
+          Graceful shutdown is the process of stopping a service in a way that allows
+          in-flight work to complete before the process exits. Rather than terminating
+          immediately when a signal is received, the service stops accepting new work,
+          finishes what it is currently doing, cleans up resources, and then exits.
+        </p>
+
+        <h2>Problem</h2>
+        <p>
+          Services are stopped regularly — for deployments, scaling events, or restarts.
+          If a service is terminated abruptly while handling a request, the client
+          receives a connection error. If it is terminated while a database transaction
+          is open, the transaction rolls back but the client has no idea whether
+          the operation succeeded or failed.
+        </p>
+        <p>
+          In a banking API, an abrupt shutdown during a transfer could leave the client
+          uncertain about whether the money moved. Graceful shutdown eliminates this
+          uncertainty by ensuring requests complete before the process exits.
+        </p>
+
+        <h2>How it works</h2>
+        <p>
+          In Go, graceful shutdown for an HTTP server follows a predictable pattern:
+        </p>
+        <ol>
+          <li>Listen for OS signals (<code>SIGTERM</code>, <code>SIGINT</code>).</li>
+          <li>When a signal arrives, stop accepting new connections.</li>
+          <li>Wait for in-flight requests to complete, up to a timeout.</li>
+          <li>Close other resources (database connections, message queue consumers).</li>
+          <li>Exit.</li>
+        </ol>
+        <pre><code>srv := &http.Server{Addr: ":8080", Handler: router}
+
+// Start server in a goroutine
+go func() {
+    if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+        log.Fatal(err)
+    }
+}()
+
+// Wait for OS signal
+quit := make(chan os.Signal, 1)
+signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+<-quit
+
+// Shutdown with a timeout
+ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+defer cancel()
+
+if err := srv.Shutdown(ctx); err != nil {
+    log.Fatal("Server shutdown failed:", err)
+}
+
+log.Println("Server stopped cleanly")</code></pre>
+        <p>
+          <code>srv.Shutdown(ctx)</code> stops the listener, waits for active connections
+          to finish, and returns when they all close or the context deadline passes.
+        </p>
+
+        <h2>Trade-offs</h2>
+        <p>
+          The shutdown timeout is a design decision. A timeout that is too short risks
+          interrupting long-running requests. A timeout that is too long delays deployments.
+          The right timeout depends on the expected duration of the longest legitimate
+          request. For most APIs, 30 seconds is a reasonable upper bound.
+        </p>
+        <p>
+          Graceful shutdown requires that in-flight work is actually bounded. If a handler
+          can run for an arbitrary amount of time — because it's waiting on a slow external
+          service — graceful shutdown won't help unless handlers also respect context
+          cancellation.
+        </p>
+
+        <h2>Practical application</h2>
+        <p>
+          Every HTTP service should implement graceful shutdown. In containerized
+          environments (Docker, Kubernetes), the runtime sends <code>SIGTERM</code>
+          before forcibly killing the process. Without graceful shutdown, the window
+          between <code>SIGTERM</code> and <code>SIGKILL</code> is wasted — active
+          requests are dropped. With graceful shutdown, that window is used to
+          finish in-flight work.
+        </p>
+        <p>
+          Background workers also need graceful shutdown. A job processor should finish
+          its current job, not abandon it mid-way, when a shutdown signal arrives.
+          The <code>context</code> package and goroutine coordination with
+          <code>sync.WaitGroup</code> are the standard tools for this.
+        </p>
+
+        <h2>My understanding</h2>
+        <p>
+          Graceful shutdown is one of those things that is easy to skip during initial
+          development — the service works, so why add the complexity? The cost becomes
+          visible during deployments, when every restart potentially drops active requests.
+        </p>
+        <p>
+          In a banking API, the stakes are higher than in most services. A dropped
+          request mid-transfer puts the client in an unknown state. Graceful shutdown
+          is part of the basic contract of a reliable service: if you send me a request,
+          I will finish handling it or tell you I can't.
+        </p>
+
+      </article>
+    </main>
+
+    <div class="mt-10 pt-5 border-t border-divider text-sm">
+      <a href="../engineering-notes.html" class="site-link">← Back to Engineering Notes</a>
+    </div>
+    <footer class="mt-8 pt-4 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between gap-2">
+      <p>© 2026 Collins Kimani.</p>
+      <a href="#" class="site-link text-xs">↑ back to top</a>
+    </footer>
+  </div>
+  <script src="../js/main.js"></script>
+</body>
+</html>

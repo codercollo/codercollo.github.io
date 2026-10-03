@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Integration Testing — Engineering Notes by Collins Kimani." />
+  <title>Integration Testing — Collins Kimani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { ivory:'#f5f2e9',charcoal:'#252525',muted:'#666666',divider:'#d6d0c5',link:'#0000cc',visited:'#551a8b',rust:'#8b3a0f' }, fontFamily: { serif:['Georgia','Times New Roman','serif'], sans:['system-ui','-apple-system','Segoe UI','sans-serif'], mono:['"Courier New"','Courier','monospace'] } } }
+    }
+  </script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+
+    <nav class="site-nav" aria-label="Site navigation">
+      <ul>
+        <li><a href="../index.html" class="site-nav__link">Home</a></li>
+        <li><a href="../index.html#projects" class="site-nav__link">Projects</a></li>
+        <li><a href="../engineering-notes.html" class="site-nav__link site-nav__link--active">Engineering Notes</a></li>
+        <li><a href="../writing.html" class="site-nav__link">Writing</a></li>
+        <li><a href="../about.html" class="site-nav__link">About</a></li>
+      </ul>
+    </nav>
+
+    <div class="note-header">
+      <a href="../engineering-notes.html" class="note-header__back">← Engineering Notes</a>
+      <h1 class="note-header__title">Integration Testing</h1>
+      <p class="note-header__meta">Go and Backend Engineering · last updated Oct 2026</p>
+    </div>
+
+    <main id="main">
+      <article class="note-body">
+
+        <h2>Concept</h2>
+        <p>
+          Integration tests exercise real components together rather than testing
+          individual units in isolation. Where a unit test might mock a database call
+          and verify that a function processes its return value correctly, an integration
+          test runs the function against a real database and verifies the actual result.
+        </p>
+        <p>
+          Integration tests give you confidence that the pieces work together correctly:
+          that SQL queries produce the expected results, that transactions behave as
+          expected under concurrent access, and that HTTP handlers return the right
+          responses end-to-end.
+        </p>
+
+        <h2>Problem</h2>
+        <p>
+          Unit tests with mocks can give false confidence. A unit test verifies that
+          your code does the right thing with whatever the mock returns, but it doesn't
+          verify that the real dependency returns what you expect, or that your SQL
+          queries are syntactically and semantically correct.
+        </p>
+        <p>
+          For backend services that depend heavily on database correctness — like Simple Bank,
+          where transaction semantics matter — unit tests with mocked databases are
+          of limited value. They can't catch subtle query bugs, constraint violations,
+          or incorrect isolation behaviour.
+        </p>
+
+        <h2>How it works</h2>
+        <p>
+          A practical approach for Go services with PostgreSQL:
+        </p>
+        <ul>
+          <li>
+            Run a real PostgreSQL instance in tests. Docker makes this straightforward:
+            start a container at the beginning of the test suite, run migrations to get
+            the schema, run tests, and stop the container.
+          </li>
+          <li>
+            Use a test database separate from development and production. Migrations run
+            fresh for each test run.
+          </li>
+          <li>
+            Wrap each test in a transaction and roll it back at the end, rather than
+            deleting test data. This keeps tests isolated without truncating tables.
+          </li>
+        </ul>
+        <p>
+          Go's testing package supports this well. The <code>TestMain</code> function
+          runs setup and teardown for the entire test suite:
+        </p>
+        <pre><code>func TestMain(m *testing.M) {
+    // set up test database
+    db = setupTestDB()
+    exitCode := m.Run()
+    // tear down
+    db.Close()
+    os.Exit(exitCode)
+}</code></pre>
+        <p>
+          For HTTP handler tests, Go's <code>net/http/httptest</code> package provides
+          a test server and recorder, allowing end-to-end handler tests without
+          starting a real server:
+        </p>
+        <pre><code>w := httptest.NewRecorder()
+req := httptest.NewRequest("POST", "/accounts", body)
+router.ServeHTTP(w, req)
+
+assert.Equal(t, http.StatusCreated, w.Code)</code></pre>
+
+        <h2>Trade-offs</h2>
+        <p>
+          Integration tests are slower than unit tests. They involve I/O — database
+          connections, query round-trips, container startup. A suite of integration tests
+          may take seconds or minutes rather than milliseconds.
+        </p>
+        <p>
+          They also require infrastructure. Running against a real database in CI requires
+          the CI environment to have that database available. Docker-based test environments
+          are the usual solution.
+        </p>
+        <p>
+          The balance I find useful: write integration tests for database interactions,
+          HTTP handler behaviour, and anything that requires real components. Write
+          unit tests for pure logic — validation rules, transformation functions,
+          business calculations — where mocks are sufficient and tests run fast.
+        </p>
+
+        <h2>Practical application</h2>
+        <p>
+          In Simple Bank, all database operations are tested against a real PostgreSQL
+          instance. The tests verify that concurrent transfers don't corrupt balances,
+          that constraint violations are caught and returned correctly, and that
+          transaction rollbacks work as expected.
+        </p>
+        <p>
+          The <code>-race</code> flag is always used when running tests for code that
+          uses goroutines. Go's race detector catches concurrent memory access bugs that
+          might not cause visible failures in regular test runs.
+        </p>
+
+        <h2>My understanding</h2>
+        <p>
+          For database-heavy services, integration tests are more valuable than unit
+          tests with mocked databases. A mock that returns <code>sql.ErrNoRows</code>
+          tells you your code handles that error correctly. A real database test tells
+          you the query is correct, the schema matches your assumptions, and the
+          transaction semantics are what you expect.
+        </p>
+        <p>
+          The investment in setting up a real test database pays off quickly. The
+          confidence you get from tests that exercise actual SQL, actual constraints,
+          and actual transaction behaviour is qualitatively different from tests
+          against mocks.
+        </p>
+
+      </article>
+    </main>
+
+    <div class="mt-10 pt-5 border-t border-divider text-sm">
+      <a href="../engineering-notes.html" class="site-link">← Back to Engineering Notes</a>
+    </div>
+    <footer class="mt-8 pt-4 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between gap-2">
+      <p>© 2026 Collins Kimani.</p>
+      <a href="#" class="site-link text-xs">↑ back to top</a>
+    </footer>
+  </div>
+  <script src="../js/main.js"></script>
+</body>
+</html>

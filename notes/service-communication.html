@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Service Communication — Engineering Notes by Collins Kimani." />
+  <title>Service Communication — Collins Kimani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { ivory:'#f5f2e9',charcoal:'#252525',muted:'#666666',divider:'#d6d0c5',link:'#0000cc',visited:'#551a8b',rust:'#8b3a0f' }, fontFamily: { serif:['Georgia','Times New Roman','serif'], sans:['system-ui','-apple-system','Segoe UI','sans-serif'], mono:['"Courier New"','Courier','monospace'] } } }
+    }
+  </script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+
+    <nav class="site-nav" aria-label="Site navigation">
+      <ul>
+        <li><a href="../index.html" class="site-nav__link">Home</a></li>
+        <li><a href="../index.html#projects" class="site-nav__link">Projects</a></li>
+        <li><a href="../engineering-notes.html" class="site-nav__link site-nav__link--active">Engineering Notes</a></li>
+        <li><a href="../writing.html" class="site-nav__link">Writing</a></li>
+        <li><a href="../about.html" class="site-nav__link">About</a></li>
+      </ul>
+    </nav>
+
+    <div class="note-header">
+      <a href="../engineering-notes.html" class="note-header__back">← Engineering Notes</a>
+      <h1 class="note-header__title">Service Communication</h1>
+      <p class="note-header__meta">API and Service Design · last updated Oct 2026</p>
+    </div>
+
+    <main id="main">
+      <article class="note-body">
+
+        <h2>Concept</h2>
+        <p>
+          When a software system is composed of multiple services, those services need
+          to exchange data. The two dominant styles are REST over HTTP and gRPC over HTTP/2.
+          Each has a distinct design philosophy, set of trade-offs, and appropriate use cases.
+        </p>
+
+        <h2>Problem</h2>
+        <p>
+          Service communication introduces failure modes that don't exist in a single process.
+          The network can be slow, unavailable, or return partial responses. A caller doesn't
+          know if a slow response means the server is processing or has failed. A request
+          might arrive at the server but the response might be lost — meaning a retry
+          could cause a duplicate operation.
+        </p>
+        <p>
+          These are the fundamental challenges: latency, partial failure, and the need
+          for services to remain useful even when their dependencies are degraded.
+        </p>
+
+        <h2>How it works</h2>
+        <p>
+          <strong>REST (Representational State Transfer)</strong> uses HTTP methods and
+          URLs to model resources and actions. Data is typically exchanged as JSON.
+          REST is human-readable, easy to explore with a browser or curl, and widely
+          supported by tooling and infrastructure.
+        </p>
+        <p>
+          REST's weakness is that its contract is informal. An API's structure is
+          documented in prose or an OpenAPI spec, but there's no built-in enforcement
+          at the protocol level. Clients and servers can drift out of sync.
+        </p>
+        <p>
+          <strong>gRPC</strong> uses Protocol Buffers to define a service contract in a
+          <code>.proto</code> file. The toolchain generates client and server code from
+          this definition, ensuring both sides agree on the message structure.
+          gRPC uses HTTP/2 for transport, which enables multiplexed streams and
+          bidirectional communication.
+        </p>
+        <p>
+          gRPC is efficient (binary encoding, smaller payloads than JSON), strongly typed
+          (the generated code enforces the contract), and well-suited for internal service
+          communication. It is harder to inspect than REST because the payload is binary.
+        </p>
+
+        <h2>Trade-offs</h2>
+        <p>
+          REST works well for public-facing APIs where human readability and broad
+          client compatibility matter. JSON is self-describing, easy to log, and
+          understood by virtually every language and framework.
+        </p>
+        <p>
+          gRPC works well for internal service-to-service communication where performance,
+          strong typing, and code generation are more valuable than human readability.
+          The generated client and server stubs reduce the risk of contract mismatches.
+        </p>
+        <p>
+          For small systems and monoliths, neither is necessary. The complexity of
+          service boundaries and a communication protocol only pays off when the
+          system is actually split across deployment units.
+        </p>
+
+        <h2>Practical application</h2>
+        <p>
+          Simple Bank uses REST for its external API — clients are external and
+          JSON over HTTP is the right choice. RentLoop communicates with the WhatsApp
+          API using webhooks (incoming HTTP POST requests) and outgoing REST calls —
+          a model where the external service pushes events rather than the application polling.
+        </p>
+        <p>
+          Key practices regardless of protocol:
+        </p>
+        <ul>
+          <li>
+            <strong>Set timeouts.</strong> Every outgoing request needs a timeout.
+            A slow dependency should not block a goroutine indefinitely.
+          </li>
+          <li>
+            <strong>Handle retries carefully.</strong> Retrying a failed request is
+            often appropriate, but only if the operation is idempotent.
+            A failed transfer request should not be retried blindly — it might
+            have succeeded and the response was simply lost.
+          </li>
+          <li>
+            <strong>Propagate context.</strong> Pass <code>context.Context</code>
+            into every outgoing request so cancellations and deadlines propagate
+            through the call chain.
+          </li>
+        </ul>
+
+        <h2>My understanding</h2>
+        <p>
+          The most important insight is that network communication is not just a
+          function call that happens over the wire. A function call either returns
+          or panics. A network call can timeout, return an error, return a partial
+          response, or succeed without you knowing it succeeded. The semantics are
+          fundamentally different.
+        </p>
+        <p>
+          I've found that building RentLoop — which depends on the WhatsApp API
+          being available and responding correctly — forced me to think about what
+          happens when it doesn't. Good service communication design starts with
+          the question: what does my service do when a dependency is unavailable
+          or slow?
+        </p>
+
+      </article>
+    </main>
+
+    <div class="mt-10 pt-5 border-t border-divider text-sm">
+      <a href="../engineering-notes.html" class="site-link">← Back to Engineering Notes</a>
+    </div>
+    <footer class="mt-8 pt-4 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between gap-2">
+      <p>© 2026 Collins Kimani.</p>
+      <a href="#" class="site-link text-xs">↑ back to top</a>
+    </footer>
+  </div>
+  <script src="../js/main.js"></script>
+</body>
+</html>

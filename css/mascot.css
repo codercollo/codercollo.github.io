@@ -1,0 +1,124 @@
+/*
+ * Collins Kimani — mascot.css
+ *
+ * Peeking Go Gopher scroll animation.
+ * GPU-friendly: only transform + opacity are animated.
+ * pointer-events: none throughout — never blocks clicks.
+ */
+
+/* ─── Reduced-motion: opt-out entirely ───────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .gopher-wrap,
+  .gopher-img {
+    display: none !important;
+  }
+}
+
+/* ─── Hide on narrow screens ─────────────────────── */
+
+@media (max-width: 599px) {
+  .gopher-wrap {
+    display: none !important;
+  }
+}
+
+/* ─── Wrapper — clips the gopher below the divider ── */
+
+/*
+  The wrapper sits in a zero-height strip right above the <hr>.
+  overflow: hidden clips anything that sticks below the divider line,
+  so only the part above it is ever visible.
+*/
+.gopher-wrap {
+  position: relative;        /* establishes stacking context */
+  height: 0;                 /* zero height — only overflow-upward is shown */
+  overflow: visible;         /* we clip via the inner container, not here */
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── Inner clip container ───────────────────────── */
+
+.gopher-clip {
+  position: absolute;
+  bottom: 0;                 /* anchored to the divider line */
+  width: 100px;
+  height: 110px;             /* max reveal height */
+  overflow: hidden;          /* clips the gopher below this box */
+  pointer-events: none;
+}
+
+/* Alternate sides via data attribute set by JS */
+.gopher-wrap[data-side="left"]  .gopher-clip { left:  0; }
+.gopher-wrap[data-side="right"] .gopher-clip { right: 0; }
+
+/* ─── The actual image ───────────────────────────── */
+
+.gopher-img {
+  position: absolute;
+  bottom: 0;
+  width: 90px;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+
+  /* start fully hidden below the clip box */
+  transform: translateY(100%);
+  opacity: 0;
+
+  /* smooth cubic-bezier with slight overshoot on the way up */
+  transition:
+    transform 0.55s cubic-bezier(.34, 1.56, .64, 1),
+    opacity   0.25s ease;
+  will-change: transform, opacity;
+}
+
+/* Tilt applied via inline style from JS (−8° … +8°) */
+
+/* ─── Peeking state: gopher slides up ~55% ───────── */
+
+.gopher-clip.is-peeking .gopher-img {
+  transform: translateY(45%);   /* 45% visible = head + upper body ~55% */
+  opacity: 1;
+}
+
+/* ─── Sinking back state ─────────────────────────── */
+
+.gopher-clip.is-sinking .gopher-img {
+  transform: translateY(100%);
+  opacity: 0;
+  /* slower, gentler ease for the retreat */
+  transition:
+    transform 0.8s cubic-bezier(.4, 0, .6, 1),
+    opacity   0.5s ease 0.3s;
+}
+
+/* ─── Optional wiggle while peeking ─────────────── */
+
+@keyframes gopher-wiggle {
+  0%,  100% { transform: translateY(45%) rotate(0deg);    }
+  20%        { transform: translateY(45%) rotate(-4deg);  }
+  40%        { transform: translateY(45%) rotate(4deg);   }
+  60%        { transform: translateY(45%) rotate(-2deg);  }
+  80%        { transform: translateY(45%) rotate(2deg);   }
+}
+
+.gopher-clip.is-peeking.is-wiggling .gopher-img {
+  animation: gopher-wiggle 0.7s ease-in-out;
+  /* override the transition so the keyframe controls motion */
+  transition: none;
+}
+
+/* ─── Small-screen scale-down (600–760px) ────────── */
+
+@media (min-width: 600px) and (max-width: 759px) {
+  .gopher-clip {
+    width: 72px;
+    height: 82px;
+  }
+  .gopher-img {
+    width: 66px;
+  }
+}

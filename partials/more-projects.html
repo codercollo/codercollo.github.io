@@ -1,0 +1,37 @@
+<!--
+  partials/more-projects.html
+  HTMX partial — injected when user clicks "show more projects"
+  Add more projects here as needed.
+-->
+
+<div>
+  <!-- Additional projects appended to the existing list -->
+  <ul class="project-list mt-0">
+
+    <li class="project-item">
+      <a href="https://github.com/codercollo" class="project-link" target="_blank" rel="noopener noreferrer">
+        Task Queue
+      </a>
+      <p class="project-desc">
+        A lightweight background job queue built in Go — retry logic, dead-letter
+        handling, and a simple HTTP API for enqueueing work.
+      </p>
+      <p class="project-tech">Go · Goroutines · Redis</p>
+    </li>
+
+    <li class="project-item">
+      <a href="https://github.com/codercollo" class="project-link" target="_blank" rel="noopener noreferrer">
+        Config Watcher
+      </a>
+      <p class="project-desc">
+        A small utility that watches config files and signals services to reload —
+        no restart required.
+      </p>
+      <p class="project-tech">Go · fsnotify · UNIX signals</p>
+    </li>
+
+  </ul>
+
+  <!-- No more button — list is now fully expanded -->
+  <p class="mt-3 text-sm text-muted italic">That's everything for now.</p>
+</div>

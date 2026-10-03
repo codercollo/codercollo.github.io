@@ -1,0 +1,651 @@
+/*
+ * Collins Kimani — Personal Portfolio
+ * css/style.css
+ *
+ * Hand-crafted styles that complement Tailwind.
+ * Tailwind handles spacing/layout; this file handles
+ * character, typography details, and animation.
+ */
+
+/* ─── Page foundation ────────────────────────────── */
+
+:root {
+  --ivory:      #f5f2e9;
+  --parchment:  #f4f1e8;
+  --charcoal:   #252525;
+  --muted:      #666666;
+  --divider:    #d6d0c5;
+  --link:       #0000cc;
+  --visited:    #551a8b;
+  --rust:       #8b3a0f;
+  --forest:     #2d5a27;
+
+  --text-base:  1rem;
+  --text-sm:    0.875rem;
+  --text-xs:    0.78rem;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--ivory);
+  color: var(--charcoal);
+}
+
+/* ─── Visited link color ─────────────────────────── */
+
+a:visited {
+  color: var(--visited);
+}
+
+/* ─── Skip link ──────────────────────────────────── */
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: var(--ivory);
+  border: 1px solid var(--divider);
+  color: var(--link);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  left: 0.5rem;
+}
+
+/* ─── Page fade-in ───────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.45s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration:  0.01ms !important;
+  }
+}
+
+/* ─── Blinking cursor (monospace detail) ─────────── */
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.cursor-blink {
+  display: inline-block;
+  animation: blink 1.1s step-end infinite;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.8em;
+  color: var(--muted);
+  margin-left: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-blink {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* ─── Site navigation ────────────────────────────── */
+
+.site-nav {
+  margin-bottom: 2rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--divider);
+}
+
+.site-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.5rem;
+}
+
+.site-nav__link {
+  font-size: 0.9rem;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.12s ease;
+  padding-bottom: 1px;
+  border-bottom: 1px solid transparent;
+}
+
+.site-nav__link:hover {
+  color: var(--charcoal);
+  border-bottom-color: var(--divider);
+}
+
+.site-nav__link:visited {
+  color: var(--muted);
+}
+
+.site-nav__link--active {
+  color: var(--charcoal);
+  border-bottom-color: var(--rust);
+}
+
+.site-nav__link:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+/* ─── Section headings ───────────────────────────── */
+
+.section-heading {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--charcoal);
+  margin-bottom: 1rem;
+  border-left: 3px solid var(--rust);
+  padding-left: 0.65rem;
+}
+
+/* ─── Section dividers ───────────────────────────── */
+
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--divider);
+  margin: 0 0 2.25rem 0;
+}
+
+/* ─── Hyperlinks ─────────────────────────────────── */
+
+.site-link {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.site-link:hover {
+  color: var(--rust);
+  text-decoration-color: var(--rust);
+}
+
+.site-link:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+/* ─── Project list ───────────────────────────────── */
+
+.project-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.project-item {
+  padding: 0.65rem 0;
+  border-bottom: 1px dotted var(--divider);
+  transition: background-color 0.15s ease;
+}
+
+.project-item:last-child {
+  border-bottom: none;
+}
+
+.project-item:hover {
+  background-color: rgba(139, 58, 15, 0.03);
+}
+
+.project-link {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  font-weight: normal;
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: color 0.15s ease;
+}
+
+.project-link:visited {
+  color: var(--visited);
+}
+
+.project-link:hover {
+  color: var(--rust);
+}
+
+.project-link:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+.project-desc {
+  font-size: 0.9rem;
+  color: var(--charcoal);
+  margin: 0.25rem 0 0.2rem 0;
+  line-height: 1.65;
+  max-width: 70ch;
+}
+
+.project-tech {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ─── HTMX trigger button ────────────────────────── */
+
+.htmx-trigger {
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.12s ease;
+}
+
+.htmx-trigger:hover {
+  color: var(--link);
+}
+
+.htmx-trigger:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+.htmx-indicator {
+  display: none;
+}
+
+.htmx-request .htmx-indicator {
+  display: inline;
+}
+
+/* ─── Engineering Foundations — skills grid ──────── */
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 560px) {
+  .skills-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2.5rem;
+  }
+}
+
+.skill-group__heading {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin-bottom: 0.45rem;
+  letter-spacing: 0.01em;
+}
+
+.skill-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.skill-list li {
+  font-size: 0.875rem;
+  color: var(--charcoal);
+  padding: 0.1rem 0;
+  line-height: 1.55;
+}
+
+.skill-list li::before {
+  content: "·";
+  color: var(--rust);
+  margin-right: 0.45rem;
+  font-weight: bold;
+}
+
+/* ─── Engineering Notes index ────────────────────── */
+
+.notes-category {
+  margin-bottom: 1.4rem;
+}
+
+.notes-category__heading {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 0.4rem;
+}
+
+.notes-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notes-list li {
+  font-size: 0.9rem;
+  padding: 0.15rem 0;
+  line-height: 1.5;
+}
+
+.note-status {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin-left: 0.35rem;
+}
+
+.note-status--draft {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+/* ─── Writing / notes list ───────────────────────── */
+
+.writing-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.writing-item {
+  padding: 0.3rem 0;
+  font-size: 0.92rem;
+}
+
+.writing-meta {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-left: 0.3rem;
+}
+
+/* ─── Elsewhere list ─────────────────────────────── */
+
+.elsewhere-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.elsewhere-list li {
+  font-size: 0.92rem;
+  padding: 0.25rem 0;
+  color: var(--charcoal);
+}
+
+/* ─── Profile photo ──────────────────────────────── */
+
+.profile-photo {
+  background-color: #e8e4d9;
+  font-family: "Courier New", Courier, monospace;
+}
+
+/* ─── Note page layout ───────────────────────────── */
+
+.note-header {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--divider);
+}
+
+.note-header__back {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  transition: color 0.12s ease;
+}
+
+.note-header__back:hover {
+  color: var(--link);
+}
+
+.note-header__title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: var(--charcoal);
+  margin-bottom: 0.35rem;
+}
+
+.note-header__meta {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* ─── Note body prose ────────────────────────────── */
+
+.note-body {
+  max-width: 68ch;
+}
+
+.note-body h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin: 1.75rem 0 0.5rem 0;
+  border-left: 3px solid var(--rust);
+  padding-left: 0.6rem;
+}
+
+.note-body p {
+  font-size: 0.93rem;
+  line-height: 1.75;
+  color: var(--charcoal);
+  margin-bottom: 0.85rem;
+}
+
+.note-body ul,
+.note-body ol {
+  padding-left: 1.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.note-body li {
+  font-size: 0.93rem;
+  line-height: 1.7;
+  color: var(--charcoal);
+  margin-bottom: 0.2rem;
+}
+
+.note-body code {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.84em;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+  color: var(--rust);
+}
+
+.note-body pre {
+  background-color: #eceae3;
+  border: 1px solid var(--divider);
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  border-radius: 2px;
+}
+
+.note-body pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.83rem;
+  color: var(--charcoal);
+}
+
+.note-body blockquote {
+  border-left: 3px solid var(--divider);
+  padding-left: 1rem;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.92rem;
+  margin: 1rem 0;
+}
+
+.note-body strong {
+  font-weight: 600;
+  color: var(--charcoal);
+}
+
+/* ─── Full notes index page ──────────────────────── */
+
+.notes-index-category {
+  margin-bottom: 2rem;
+}
+
+.notes-index-category__heading {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin-bottom: 0.6rem;
+  border-left: 3px solid var(--rust);
+  padding-left: 0.6rem;
+}
+
+.notes-index-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notes-index-list li {
+  padding: 0.2rem 0;
+  font-size: 0.9rem;
+  border-bottom: 1px dotted var(--divider);
+}
+
+.notes-index-list li:last-child {
+  border-bottom: none;
+}
+
+/* ─── About page ─────────────────────────────────── */
+
+.about-body {
+  max-width: 68ch;
+}
+
+.about-body p {
+  font-size: 0.93rem;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  color: var(--charcoal);
+}
+
+.about-body ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+.about-body ul li {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  padding: 0.1rem 0;
+}
+
+.about-body ul li::before {
+  content: "—";
+  color: var(--muted);
+  margin-right: 0.5rem;
+  font-family: Georgia, serif;
+}
+
+/* ─── Writing page ───────────────────────────────── */
+
+.writing-entry {
+  padding: 0.75rem 0;
+  border-bottom: 1px dotted var(--divider);
+}
+
+.writing-entry:last-child {
+  border-bottom: none;
+}
+
+.writing-entry__title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: color 0.12s ease;
+}
+
+.writing-entry__title:hover {
+  color: var(--rust);
+}
+
+.writing-entry__meta {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0.15rem 0 0.3rem 0;
+}
+
+.writing-entry__desc {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 65ch;
+}
+
+/* ─── Focus styles (global safety net) ───────────── */
+
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+/* ─── Screen reader utilities ────────────────────── */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

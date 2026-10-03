@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Isolation Levels — Engineering Notes by Collins Kimani." />
+  <title>Isolation Levels — Collins Kimani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { ivory:'#f5f2e9',charcoal:'#252525',muted:'#666666',divider:'#d6d0c5',link:'#0000cc',visited:'#551a8b',rust:'#8b3a0f' }, fontFamily: { serif:['Georgia','Times New Roman','serif'], sans:['system-ui','-apple-system','Segoe UI','sans-serif'], mono:['"Courier New"','Courier','monospace'] } } }
+    }
+  </script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+
+    <nav class="site-nav" aria-label="Site navigation">
+      <ul>
+        <li><a href="../index.html" class="site-nav__link">Home</a></li>
+        <li><a href="../index.html#projects" class="site-nav__link">Projects</a></li>
+        <li><a href="../engineering-notes.html" class="site-nav__link site-nav__link--active">Engineering Notes</a></li>
+        <li><a href="../writing.html" class="site-nav__link">Writing</a></li>
+        <li><a href="../about.html" class="site-nav__link">About</a></li>
+      </ul>
+    </nav>
+
+    <div class="note-header">
+      <a href="../engineering-notes.html" class="note-header__back">← Engineering Notes</a>
+      <h1 class="note-header__title">Isolation Levels</h1>
+      <p class="note-header__meta">Data and Persistence · last updated Oct 2026</p>
+    </div>
+
+    <main id="main">
+      <article class="note-body">
+
+        <h2>Concept</h2>
+        <p>
+          Isolation levels control how much one database transaction can see of another
+          transaction's uncommitted work. They represent a configurable trade-off between
+          consistency (how correct and predictable the data is) and performance (how much
+          locking and contention the database must manage).
+        </p>
+        <p>
+          The SQL standard defines four isolation levels. Most databases implement variations
+          of these, and PostgreSQL in particular implements them using multiversion concurrency
+          control (MVCC), which means reads generally don't block writes.
+        </p>
+
+        <h2>Problem</h2>
+        <p>
+          When multiple transactions run at the same time, several anomalies can occur:
+        </p>
+        <ul>
+          <li>
+            <strong>Dirty read</strong> — a transaction reads data written by another
+            transaction that has not yet committed. If that transaction rolls back, the
+            first transaction has read data that never existed.
+          </li>
+          <li>
+            <strong>Non-repeatable read</strong> — a transaction reads the same row twice
+            and gets different values because another transaction modified and committed
+            that row between the two reads.
+          </li>
+          <li>
+            <strong>Phantom read</strong> — a transaction executes the same query twice
+            and gets a different number of rows because another transaction inserted or
+            deleted rows matching the query between the two executions.
+          </li>
+          <li>
+            <strong>Serialization anomaly</strong> — the result of running transactions
+            concurrently is inconsistent with any possible sequential execution of those
+            same transactions.
+          </li>
+        </ul>
+        <p>
+          Different applications can tolerate different anomalies. A financial system
+          processing transfers needs strong guarantees. An analytics dashboard reading
+          approximate aggregate counts can tolerate weaker consistency.
+        </p>
+
+        <h2>How it works</h2>
+        <p>The four standard levels, from weakest to strongest:</p>
+
+        <p>
+          <strong>Read Uncommitted</strong> — transactions can read uncommitted changes
+          from other transactions. Dirty reads are possible. PostgreSQL maps this to
+          Read Committed in practice.
+        </p>
+        <p>
+          <strong>Read Committed</strong> — a transaction only sees data that has been
+          committed. Each statement within a transaction sees the latest committed snapshot
+          at the time that statement runs. This is PostgreSQL's default level.
+          Non-repeatable reads are possible because two statements in the same transaction
+          may see different snapshots.
+        </p>
+        <p>
+          <strong>Repeatable Read</strong> — a transaction sees a consistent snapshot of
+          the database taken at the start of the transaction. Non-repeatable reads are
+          prevented. Phantom reads can still occur in standard SQL, but PostgreSQL's MVCC
+          implementation prevents them at this level too.
+        </p>
+        <p>
+          <strong>Serializable</strong> — the strongest level. Transactions execute as if
+          they ran one after another in some serial order. All anomalies are prevented.
+          PostgreSQL implements this using predicate locking to detect and abort transactions
+          that would produce a serialization anomaly.
+        </p>
+
+        <h2>Trade-offs</h2>
+        <p>
+          Stronger isolation means more overhead. At Serializable, PostgreSQL must track
+          access patterns and may abort transactions that would cause anomalies, requiring
+          the application to retry them. This adds complexity to application code.
+        </p>
+        <p>
+          Read Committed is the practical default for most applications. It prevents the
+          worst anomalies (dirty reads) while keeping contention manageable. Moving to
+          Repeatable Read or Serializable should be a deliberate decision, usually for
+          specific operations that require stronger guarantees.
+        </p>
+
+        <h2>Practical application</h2>
+        <p>
+          In Simple Bank, the money transfer logic requires that the debit and credit
+          are consistent. If two transfers are running concurrently that both touch the
+          same account, they must not interfere. The solution is to acquire locks in a
+          consistent order — always lock the lower account ID first — which prevents
+          deadlocks without requiring Serializable isolation for the entire database.
+        </p>
+        <p>
+          Setting isolation level in PostgreSQL:
+        </p>
+        <pre><code>BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+-- queries here see a consistent snapshot
+COMMIT;</code></pre>
+        <p>
+          In Go with <code>database/sql</code>:
+        </p>
+        <pre><code>tx, err := db.BeginTx(ctx, &sql.TxOptions{
+    Isolation: sql.LevelRepeatableRead,
+})</code></pre>
+
+        <h2>My understanding</h2>
+        <p>
+          Isolation levels are one of those things that seem academic until you build
+          something with concurrent writes. In Simple Bank, I initially assumed that
+          using transactions was enough to make concurrent transfers safe. It wasn't.
+          I had to understand what Read Committed actually guarantees — and what it
+          doesn't — before I could reason correctly about the locking strategy.
+        </p>
+        <p>
+          The key insight is that isolation and atomicity are separate concerns.
+          Transactions give you atomicity. The isolation level controls what concurrent
+          transactions can see of each other. You need to think about both.
+        </p>
+
+      </article>
+    </main>
+
+    <div class="mt-10 pt-5 border-t border-divider text-sm">
+      <a href="../engineering-notes.html" class="site-link">← Back to Engineering Notes</a>
+    </div>
+    <footer class="mt-8 pt-4 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between gap-2">
+      <p>© 2026 Collins Kimani.</p>
+      <a href="#" class="site-link text-xs">↑ back to top</a>
+    </footer>
+  </div>
+  <script src="../js/main.js"></script>
+</body>
+</html>

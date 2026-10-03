@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Database Transactions — Engineering Notes by Collins Kimani." />
+  <title>Database Transactions — Collins Kimani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { ivory:'#f5f2e9',charcoal:'#252525',muted:'#666666',divider:'#d6d0c5',link:'#0000cc',visited:'#551a8b',rust:'#8b3a0f' }, fontFamily: { serif:['Georgia','Times New Roman','serif'], sans:['system-ui','-apple-system','Segoe UI','sans-serif'], mono:['"Courier New"','Courier','monospace'] } } }
+    }
+  </script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+
+    <nav class="site-nav" aria-label="Site navigation">
+      <ul>
+        <li><a href="../index.html" class="site-nav__link">Home</a></li>
+        <li><a href="../index.html#projects" class="site-nav__link">Projects</a></li>
+        <li><a href="../engineering-notes.html" class="site-nav__link site-nav__link--active">Engineering Notes</a></li>
+        <li><a href="../writing.html" class="site-nav__link">Writing</a></li>
+        <li><a href="../about.html" class="site-nav__link">About</a></li>
+      </ul>
+    </nav>
+
+    <div class="note-header">
+      <a href="../engineering-notes.html" class="note-header__back">← Engineering Notes</a>
+      <h1 class="note-header__title">Database Transactions</h1>
+      <p class="note-header__meta">Data and Persistence · last updated Oct 2026</p>
+    </div>
+
+    <main id="main">
+      <article class="note-body">
+
+        <h2>Concept</h2>
+        <p>
+          A database transaction is a unit of work that is treated as a single, indivisible
+          operation. Either every change inside the transaction succeeds and is committed to
+          the database, or none of them are — the database rolls back to the state it was in
+          before the transaction started.
+        </p>
+        <p>
+          Transactions give you a way to execute multiple SQL statements as an atomic group.
+          This matters any time a logical operation requires more than one write to the database.
+        </p>
+
+        <h2>Problem</h2>
+        <p>
+          Consider a bank transfer: you need to deduct money from one account and credit it
+          to another. If the deduction succeeds but the credit fails — due to a crash, a
+          network error, or a constraint violation — you now have an inconsistent database.
+          Money has left one account but not arrived anywhere.
+        </p>
+        <p>
+          Without transactions, you would need to write manual recovery logic for every
+          possible failure point. Transactions handle this at the database level, automatically.
+        </p>
+
+        <h2>How it works</h2>
+        <p>
+          A transaction typically begins with a <code>BEGIN</code> statement, followed by
+          one or more SQL statements, and closes with either <code>COMMIT</code> (apply all changes)
+          or <code>ROLLBACK</code> (discard all changes).
+        </p>
+        <pre><code>BEGIN;
+  UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+  UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;</code></pre>
+        <p>
+          If the database crashes between the two UPDATE statements, the transaction is
+          automatically rolled back when the database restarts. Both accounts return to
+          their original balances.
+        </p>
+        <p>
+          This behaviour is guaranteed through a mechanism called a write-ahead log (WAL).
+          The database records every intended change to a log before applying it. On recovery,
+          it uses the log to either complete committed transactions or discard uncommitted ones.
+        </p>
+        <p>
+          Transactions in relational databases are defined by four properties, collectively
+          known as ACID:
+        </p>
+        <ul>
+          <li><strong>Atomicity</strong> — all changes succeed, or none do.</li>
+          <li><strong>Consistency</strong> — the database moves from one valid state to another.</li>
+          <li><strong>Isolation</strong> — concurrent transactions don't see each other's incomplete work.</li>
+          <li><strong>Durability</strong> — committed changes survive crashes.</li>
+        </ul>
+
+        <h2>Trade-offs</h2>
+        <p>
+          Transactions are not free. They hold locks on the rows or pages they modify,
+          which can block other transactions from reading or writing the same data.
+          Long-running transactions increase lock contention and can reduce throughput significantly.
+        </p>
+        <p>
+          The level of isolation between concurrent transactions is also configurable.
+          Stronger isolation prevents more anomalies but increases contention.
+          Weaker isolation improves performance but can allow reads of inconsistent data.
+          See the note on <a href="isolation-levels.html" class="site-link">Isolation Levels</a>
+          for a detailed breakdown.
+        </p>
+
+        <h2>Practical application</h2>
+        <p>
+          In Simple Bank, every transfer operation runs inside a transaction.
+          The transfer logic debits one account and credits another:
+          if either operation fails, the whole transfer is rolled back and no money moves.
+        </p>
+        <p>
+          In Go with the <code>database/sql</code> package, you begin a transaction with
+          <code>db.BeginTx(ctx, opts)</code>, run your queries, and defer a rollback as a
+          safety net before committing:
+        </p>
+        <pre><code>tx, err := db.BeginTx(ctx, nil)
+if err != nil {
+    return err
+}
+defer tx.Rollback() // no-op if tx.Commit() is called first
+
+// ... execute queries using tx ...
+
+return tx.Commit()</code></pre>
+        <p>
+          The deferred <code>Rollback()</code> is a common Go pattern. If the function returns
+          early due to an error, the rollback fires. If <code>Commit()</code> has already been
+          called, the rollback is a no-op.
+        </p>
+
+        <h2>My understanding</h2>
+        <p>
+          Before building Simple Bank, I thought of transactions primarily as a way to group
+          writes. What I came to understand is that isolation is the harder, more interesting
+          problem. Atomicity is relatively straightforward — either everything commits or
+          nothing does. But isolation involves trade-offs about what concurrent transactions
+          are allowed to see, and those trade-offs have real consequences for both correctness
+          and performance.
+        </p>
+        <p>
+          The most important lesson: keep transactions short. Long-running transactions
+          hold locks and prevent other work from proceeding. If a transaction needs to
+          do expensive computation, do the computation first, then open the transaction
+          and execute only the writes.
+        </p>
+
+      </article>
+    </main>
+
+    <div class="mt-10 pt-5 border-t border-divider text-sm text-muted">
+      <a href="../engineering-notes.html" class="site-link">← Back to Engineering Notes</a>
+    </div>
+
+    <footer class="mt-8 pt-4 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between gap-2">
+      <p>© 2026 Collins Kimani.</p>
+      <a href="#" class="site-link text-xs">↑ back to top</a>
+    </footer>
+  </div>
+  <script src="../js/main.js"></script>
+</body>
+</html>

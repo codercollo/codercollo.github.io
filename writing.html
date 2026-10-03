@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Writing — Collins Kimani's longer articles, reflections, and engineering lessons." />
+  <title>Writing — Collins Kimani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ivory:'#f5f2e9', parchment:'#f4f1e8', charcoal:'#252525',
+            muted:'#666666', divider:'#d6d0c5', link:'#0000cc',
+            visited:'#551a8b', rust:'#8b3a0f', forest:'#2d5a27',
+          },
+          fontFamily: {
+            serif:['Georgia','Times New Roman','serif'],
+            sans:['system-ui','-apple-system','Segoe UI','sans-serif'],
+            mono:['"Courier New"','Courier','monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/mascot.css" />
+</head>
+<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+
+    <nav class="site-nav" aria-label="Site navigation">
+      <ul>
+        <li><a href="index.html" class="site-nav__link">Home</a></li>
+        <li><a href="index.html#projects" class="site-nav__link">Projects</a></li>
+        <li><a href="engineering-notes.html" class="site-nav__link">Engineering Notes</a></li>
+        <li><a href="writing.html" class="site-nav__link site-nav__link--active" aria-current="page">Writing</a></li>
+        <li><a href="about.html" class="site-nav__link">About</a></li>
+      </ul>
+    </nav>
+
+    <header class="mb-8 pb-6 border-b border-divider">
+      <h1 class="font-serif text-2xl font-normal text-charcoal mb-2">Writing</h1>
+      <p class="text-sm text-muted max-w-prose leading-6">
+        Longer articles, implementation reflections, and engineering lessons.
+        Separate from my <a href="engineering-notes.html" class="site-link">Engineering Notes</a>,
+        which are shorter, concept-focused explanations.
+      </p>
+    </header>
+
+    <main id="main">
+
+      <!-- Forthcoming / In progress -->
+      <div class="mb-3">
+        <p class="text-sm text-muted italic mb-5">
+          Nothing published yet. The entries below are drafts in progress.
+        </p>
+      </div>
+
+      <div class="writing-entry">
+        <a href="#" class="writing-entry__title">Thinking in goroutines: a practical mental model</a>
+        <p class="writing-entry__meta">draft · Go · Concurrency</p>
+        <p class="writing-entry__desc">
+          Go's concurrency model is simple in its primitives but easy to misuse.
+          This piece explores the mental model I've built for reasoning about goroutines,
+          channels, and when to reach for each.
+        </p>
+      </div>
+
+      <div class="writing-entry">
+        <a href="#" class="writing-entry__title">Why I keep reaching for SQLC over ORMs</a>
+        <p class="writing-entry__meta">draft · Go · Databases</p>
+        <p class="writing-entry__desc">
+          ORMs promise productivity but hide what's happening in the database.
+          SQLC keeps SQL explicit and the code readable. A reflection on the trade-off.
+        </p>
+      </div>
+
+      <div class="writing-entry">
+        <a href="#" class="writing-entry__title">Building a small OTP system from scratch</a>
+        <p class="writing-entry__meta">draft · Go · Security · GoTP</p>
+        <p class="writing-entry__desc">
+          What I learned building GoTP — how OTP verification works, the problems
+          of idempotency and rate limiting, and the engineering decisions behind keeping
+          the system simple.
+        </p>
+      </div>
+
+      <div class="writing-entry">
+        <a href="#" class="writing-entry__title">What concurrent bank transfers taught me about database transactions</a>
+        <p class="writing-entry__meta">draft · Go · Databases · Simple Bank</p>
+        <p class="writing-entry__desc">
+          Building Simple Bank required thinking carefully about ACID properties,
+          lock ordering, and what actually happens inside a PostgreSQL transaction.
+          This is what I learned.
+        </p>
+      </div>
+
+    </main>
+
+    <footer class="mt-12 pt-6 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+      <p>© 2026 Collins Kimani. Built with curiosity.</p>
+      <a href="#" class="site-link text-xs">↑ back to top</a>
+    </footer>
+
+  </div>
+
+  <script src="js/main.js"></script>
+  <script src="js/mascot.js" defer></script>
+</body>
+</html>

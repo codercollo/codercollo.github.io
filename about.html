@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="About Collins Kimani — Backend Developer and Go Engineer." />
+  <title>About — Collins Kimani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ivory:'#f5f2e9', parchment:'#f4f1e8', charcoal:'#252525',
+            muted:'#666666', divider:'#d6d0c5', link:'#0000cc',
+            visited:'#551a8b', rust:'#8b3a0f', forest:'#2d5a27',
+          },
+          fontFamily: {
+            serif:['Georgia','Times New Roman','serif'],
+            sans:['system-ui','-apple-system','Segoe UI','sans-serif'],
+            mono:['"Courier New"','Courier','monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/mascot.css" />
+</head>
+<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+
+    <nav class="site-nav" aria-label="Site navigation">
+      <ul>
+        <li><a href="index.html" class="site-nav__link">Home</a></li>
+        <li><a href="index.html#projects" class="site-nav__link">Projects</a></li>
+        <li><a href="engineering-notes.html" class="site-nav__link">Engineering Notes</a></li>
+        <li><a href="writing.html" class="site-nav__link">Writing</a></li>
+        <li><a href="about.html" class="site-nav__link site-nav__link--active" aria-current="page">About</a></li>
+      </ul>
+    </nav>
+
+    <header class="mb-8 pb-6 border-b border-divider">
+      <h1 class="font-serif text-2xl font-normal text-charcoal mb-1">About</h1>
+    </header>
+
+    <main id="main">
+      <div class="about-body">
+
+        <p>
+          I'm Collins Kimani, a backend developer working primarily with Go.
+          I'm based in Nairobi, Kenya. You can find my code on
+          <a href="https://github.com/codercollo" class="site-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+          under <span class="font-mono text-sm">@codercollo</span>.
+        </p>
+
+        <p>
+          My interest is in understanding how software systems work beneath the surface —
+          not just writing code that runs, but understanding why it behaves the way it does,
+          where it can fail, and how to build things that hold up under real conditions.
+        </p>
+
+        <p>I'm particularly interested in:</p>
+
+        <ul>
+          <li>Building practical backend applications with Go</li>
+          <li>Understanding system behaviour and engineering trade-offs</li>
+          <li>Learning through implementation rather than theory alone</li>
+          <li>Documenting engineering concepts as I encounter them</li>
+          <li>Continuously improving my software design and problem-solving skills</li>
+        </ul>
+
+        <p>
+          The projects on this site — Simple Bank, GoTP, RentLoop, and the URL Shortener —
+          are practical exercises in applying what I study. Each one involved an engineering
+          problem worth thinking carefully about: concurrent transactions, idempotent
+          operations, external API integration, or clean API design.
+        </p>
+
+        <p>
+          The Engineering Notes section is where I write down what I learn.
+          Writing is how I check whether I actually understand something.
+          If I can explain a concept clearly, I probably understand it.
+          If the explanation gets muddy, I probably have more studying to do.
+        </p>
+
+        <p>
+          I'm not looking to collect technologies. I'd rather understand fewer things
+          well than have a long list of tools I've touched briefly.
+        </p>
+
+        <h2 class="section-heading mt-8">Get in touch</h2>
+
+        <ul class="elsewhere-list">
+          <li>
+            <a href="mailto:collins@example.com" class="site-link">Email</a>
+            — the best way to reach me.
+          </li>
+          <li>
+            <a href="https://github.com/codercollo" class="site-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+            — where the code lives.
+          </li>
+          <li>
+            <a href="https://linkedin.com/in/codercollo" class="site-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            — professional details.
+          </li>
+          <li>
+            <a href="https://x.com/codercollo" class="site-link" target="_blank" rel="noopener noreferrer">X / Twitter</a>
+            — sporadic thoughts on Go and software.
+          </li>
+        </ul>
+
+      </div>
+    </main>
+
+    <footer class="mt-12 pt-6 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+      <p>© 2026 Collins Kimani. Built with curiosity.</p>
+      <a href="#" class="site-link text-xs">↑ back to top</a>
+    </footer>
+
+  </div>
+
+  <script src="js/main.js"></script>
+  <script src="js/mascot.js" defer></script>
+</body>
+</html>

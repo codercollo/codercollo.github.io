@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Error Handling Strategies — Engineering Notes by Collins Kimani." />
+  <title>Error Handling — Collins Kimani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { ivory:'#f5f2e9',charcoal:'#252525',muted:'#666666',divider:'#d6d0c5',link:'#0000cc',visited:'#551a8b',rust:'#8b3a0f' }, fontFamily: { serif:['Georgia','Times New Roman','serif'], sans:['system-ui','-apple-system','Segoe UI','sans-serif'], mono:['"Courier New"','Courier','monospace'] } } }
+    }
+  </script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+
+    <nav class="site-nav" aria-label="Site navigation">
+      <ul>
+        <li><a href="../index.html" class="site-nav__link">Home</a></li>
+        <li><a href="../index.html#projects" class="site-nav__link">Projects</a></li>
+        <li><a href="../engineering-notes.html" class="site-nav__link site-nav__link--active">Engineering Notes</a></li>
+        <li><a href="../writing.html" class="site-nav__link">Writing</a></li>
+        <li><a href="../about.html" class="site-nav__link">About</a></li>
+      </ul>
+    </nav>
+
+    <div class="note-header">
+      <a href="../engineering-notes.html" class="note-header__back">← Engineering Notes</a>
+      <h1 class="note-header__title">Error Handling Strategies</h1>
+      <p class="note-header__meta">Go and Backend Engineering · last updated Oct 2026</p>
+    </div>
+
+    <main id="main">
+      <article class="note-body">
+
+        <h2>Concept</h2>
+        <p>
+          In Go, errors are values. Functions that can fail return an error as their last
+          return value. The caller receives the error and decides what to do with it —
+          return it, wrap it with context, log it, or handle it. There is no implicit
+          exception propagation.
+        </p>
+        <p>
+          This is a deliberate design choice. It makes error handling explicit and local.
+          Every call site that can fail must address the failure.
+        </p>
+
+        <h2>Problem</h2>
+        <p>
+          Explicit error handling can become noisy. The pattern
+          <code>if err != nil { return err }</code> repeats throughout Go code. The
+          challenge is handling errors in a way that is explicit and informative without
+          becoming boilerplate.
+        </p>
+        <p>
+          A deeper problem is distinguishing between different kinds of errors:
+          errors the caller should handle differently (a record not found vs a database
+          connection failure), errors that should be logged vs errors that should be
+          returned to the user, and errors that indicate a bug vs errors that are
+          expected operating conditions.
+        </p>
+
+        <h2>How it works</h2>
+        <p>
+          <strong>Wrapping errors with context.</strong> The <code>fmt.Errorf</code>
+          function with the <code>%w</code> verb wraps an error, adding context while
+          preserving the original for inspection:
+        </p>
+        <pre><code>if err := db.GetUser(id); err != nil {
+    return fmt.Errorf("get user %d: %w", id, err)
+}</code></pre>
+        <p>
+          The caller can then unwrap the error to inspect it:
+          <code>errors.Is(err, sql.ErrNoRows)</code> returns true even if the error
+          has been wrapped multiple times.
+        </p>
+        <p>
+          <strong>Sentinel errors.</strong> For expected conditions, define package-level
+          error values that callers can check:
+        </p>
+        <pre><code>var ErrAccountNotFound = errors.New("account not found")
+
+// caller:
+if errors.Is(err, ErrAccountNotFound) {
+    // return 404
+}</code></pre>
+        <p>
+          <strong>Custom error types.</strong> When an error needs to carry structured
+          data — an HTTP status code, a field name, a constraint violation — define a
+          concrete type that implements the <code>error</code> interface:
+        </p>
+        <pre><code>type ValidationError struct {
+    Field   string
+    Message string
+}
+
+func (e *ValidationError) Error() string {
+    return fmt.Sprintf("validation error on %s: %s", e.Field, e.Message)
+}</code></pre>
+
+        <h2>Trade-offs</h2>
+        <p>
+          Wrapping every error with context helps debugging but adds verbosity.
+          A common strategy: wrap errors as they cross package or layer boundaries,
+          but not at every internal call site within a package.
+        </p>
+        <p>
+          Sentinel errors create coupling between packages. If a lower-level package
+          changes its error values, callers break. Custom error types with
+          <code>errors.As</code> and interface checks can be more flexible.
+        </p>
+        <p>
+          The distinction between an error that should be logged and one that should
+          be returned to the caller matters. A database connection failure is an
+          internal error — log it, return a generic <code>500</code>. A record not found
+          is a normal condition — return a <code>404</code> without logging.
+        </p>
+
+        <h2>Practical application</h2>
+        <p>
+          In Simple Bank, database errors are inspected to distinguish between
+          "not found" (return 404) and genuine failures (return 500). The
+          <code>pq</code> library returns PostgreSQL error codes as typed errors,
+          so unique constraint violations can be identified and returned as 409 conflicts
+          rather than internal errors.
+        </p>
+        <p>
+          In GoTP, errors from the SMS provider are wrapped and logged but not exposed
+          to the caller. The API returns a generic error message, while the detailed
+          error is available in structured logs for debugging.
+        </p>
+
+        <h2>My understanding</h2>
+        <p>
+          The explicit error handling in Go felt like overhead at first. Coming from
+          languages with exceptions, returning errors from every function seemed
+          repetitive. Over time I've come to appreciate it: you can't accidentally
+          ignore a failure. Every call site makes a deliberate decision about what to
+          do with an error.
+        </p>
+        <p>
+          The most useful habit I've developed: always add context when returning an error.
+          <code>return err</code> loses the where. <code>return fmt.Errorf("create account: %w", err)</code>
+          preserves the original and tells you what operation was in progress.
+          This makes reading stack traces and logs significantly easier.
+        </p>
+
+      </article>
+    </main>
+
+    <div class="mt-10 pt-5 border-t border-divider text-sm">
+      <a href="../engineering-notes.html" class="site-link">← Back to Engineering Notes</a>
+    </div>
+    <footer class="mt-8 pt-4 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between gap-2">
+      <p>© 2026 Collins Kimani.</p>
+      <a href="#" class="site-link text-xs">↑ back to top</a>
+    </footer>
+  </div>
+  <script src="../js/main.js"></script>
+</body>
+</html>

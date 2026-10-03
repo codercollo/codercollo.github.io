@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Engineering Notes — Collins Kimani's personal knowledge index of backend engineering concepts." />
+  <title>Engineering Notes — Collins Kimani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2uodhyzLkVBaE0wFhRiMo+FeynEpUMZqVCF" crossorigin="anonymous" defer></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ivory:'#f5f2e9', parchment:'#f4f1e8', charcoal:'#252525',
+            muted:'#666666', divider:'#d6d0c5', link:'#0000cc',
+            visited:'#551a8b', rust:'#8b3a0f', forest:'#2d5a27',
+          },
+          fontFamily: {
+            serif:['Georgia','Times New Roman','serif'],
+            sans:['system-ui','-apple-system','Segoe UI','sans-serif'],
+            mono:['"Courier New"','Courier','monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/mascot.css" />
+</head>
+<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+
+    <nav class="site-nav" aria-label="Site navigation">
+      <ul>
+        <li><a href="index.html" class="site-nav__link">Home</a></li>
+        <li><a href="index.html#projects" class="site-nav__link">Projects</a></li>
+        <li><a href="engineering-notes.html" class="site-nav__link site-nav__link--active" aria-current="page">Engineering Notes</a></li>
+        <li><a href="writing.html" class="site-nav__link">Writing</a></li>
+        <li><a href="about.html" class="site-nav__link">About</a></li>
+      </ul>
+    </nav>
+
+    <header class="mb-8 pb-6 border-b border-divider">
+      <h1 class="font-serif text-2xl font-normal text-charcoal mb-2">Engineering Notes</h1>
+      <p class="text-sm text-muted max-w-prose leading-6">
+        A personal knowledge index. Concepts I encounter while building software,
+        written down to sharpen my understanding. These are working notes — some are
+        thorough, some are still being developed.
+      </p>
+    </header>
+
+    <main id="main">
+
+      <!-- ─── Data and Persistence ──────────────────── -->
+      <section class="notes-index-category" aria-labelledby="cat-data">
+        <h2 id="cat-data" class="notes-index-category__heading">Data and Persistence</h2>
+        <ul class="notes-index-list">
+          <li>
+            <a href="notes/database-transactions.html" class="site-link">Database Transactions</a>
+            <span class="note-status"> — What transactions are, why they matter, and the problems they solve.</span>
+          </li>
+          <li>
+            <a href="notes/isolation-levels.html" class="site-link">Isolation Levels</a>
+            <span class="note-status"> — How databases handle concurrent access and the trade-offs between consistency and performance.</span>
+          </li>
+          <li>
+            <a href="notes/database-indexing.html" class="site-link">Database Indexing</a>
+            <span class="note-status note-status--draft"> — draft</span>
+          </li>
+          <li>
+            <a href="notes/schema-migrations.html" class="site-link">Schema Migrations</a>
+            <span class="note-status note-status--draft"> — draft</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ─── Go and Backend ────────────────────────── -->
+      <section class="notes-index-category" aria-labelledby="cat-go">
+        <h2 id="cat-go" class="notes-index-category__heading">Go and Backend Engineering</h2>
+        <ul class="notes-index-list">
+          <li>
+            <a href="notes/go-concurrency.html" class="site-link">Go Concurrency Patterns</a>
+            <span class="note-status"> — Goroutines, channels, and the reasoning behind Go's concurrency model.</span>
+          </li>
+          <li>
+            <a href="notes/error-handling.html" class="site-link">Error Handling Strategies</a>
+            <span class="note-status"> — How Go handles errors and why the approach leads to more explicit, reliable code.</span>
+          </li>
+          <li>
+            <a href="notes/graceful-shutdown.html" class="site-link">Graceful Shutdown</a>
+            <span class="note-status"> — How a service stops cleanly without dropping in-flight requests.</span>
+          </li>
+          <li>
+            <a href="notes/integration-testing.html" class="site-link">Integration Testing</a>
+            <span class="note-status"> — Testing that exercises real components together, not just individual units.</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ─── API and Service Design ────────────────── -->
+      <section class="notes-index-category" aria-labelledby="cat-api">
+        <h2 id="cat-api" class="notes-index-category__heading">API and Service Design</h2>
+        <ul class="notes-index-list">
+          <li>
+            <a href="notes/api-design.html" class="site-link">API Design</a>
+            <span class="note-status"> — What makes an API consistent, predictable, and easy to work with.</span>
+          </li>
+          <li>
+            <a href="notes/service-communication.html" class="site-link">Service Communication</a>
+            <span class="note-status"> — REST, gRPC, and how services exchange data reliably.</span>
+          </li>
+          <li>
+            <a href="notes/api-versioning.html" class="site-link">API Versioning</a>
+            <span class="note-status note-status--draft"> — draft</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ─── Distributed Systems ───────────────────── -->
+      <section class="notes-index-category" aria-labelledby="cat-dist">
+        <h2 id="cat-dist" class="notes-index-category__heading">Distributed Systems</h2>
+        <ul class="notes-index-list">
+          <li>
+            <a href="notes/idempotency.html" class="site-link">Idempotency</a>
+            <span class="note-status note-status--draft"> — draft</span>
+          </li>
+          <li>
+            <a href="notes/timeouts-retries.html" class="site-link">Timeouts and Retries</a>
+            <span class="note-status note-status--draft"> — draft</span>
+          </li>
+          <li>
+            <a href="notes/eventual-consistency.html" class="site-link">Eventual Consistency</a>
+            <span class="note-status note-status--draft"> — draft</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ─── Testing and Reliability ──────────────── -->
+      <section class="notes-index-category" aria-labelledby="cat-testing">
+        <h2 id="cat-testing" class="notes-index-category__heading">Testing and Reliability</h2>
+        <ul class="notes-index-list">
+          <li>
+            <a href="notes/integration-testing.html" class="site-link">Integration Testing</a>
+            <span class="note-status"> — see Go and Backend Engineering</span>
+          </li>
+          <li>
+            <a href="notes/graceful-shutdown.html" class="site-link">Graceful Shutdown</a>
+            <span class="note-status"> — see Go and Backend Engineering</span>
+          </li>
+          <li>
+            <a href="notes/race-conditions.html" class="site-link">Race Conditions</a>
+            <span class="note-status note-status--draft"> — draft</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ─── Infrastructure and Observability ─────── -->
+      <section class="notes-index-category" aria-labelledby="cat-infra">
+        <h2 id="cat-infra" class="notes-index-category__heading">Infrastructure and Observability</h2>
+        <ul class="notes-index-list">
+          <li>
+            <a href="notes/structured-logging.html" class="site-link">Structured Logging</a>
+            <span class="note-status note-status--draft"> — draft</span>
+          </li>
+          <li>
+            <a href="notes/ci-cd.html" class="site-link">CI/CD Pipelines</a>
+            <span class="note-status note-status--draft"> — draft</span>
+          </li>
+          <li>
+            <a href="notes/health-checks.html" class="site-link">Health Checks</a>
+            <span class="note-status note-status--draft"> — draft</span>
+          </li>
+        </ul>
+      </section>
+
+    </main>
+
+    <footer class="mt-12 pt-6 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+      <p>© 2026 Collins Kimani. Built with curiosity.</p>
+      <a href="#" class="site-link text-xs" aria-label="Back to top">↑ back to top</a>
+    </footer>
+
+  </div>
+
+  <script src="js/main.js"></script>
+  <script src="js/mascot.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Go Concurrency Patterns — Engineering Notes by Collins Kimani." />
+  <title>Go Concurrency Patterns — Collins Kimani</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { ivory:'#f5f2e9',charcoal:'#252525',muted:'#666666',divider:'#d6d0c5',link:'#0000cc',visited:'#551a8b',rust:'#8b3a0f' }, fontFamily: { serif:['Georgia','Times New Roman','serif'], sans:['system-ui','-apple-system','Segoe UI','sans-serif'], mono:['"Courier New"','Courier','monospace'] } } }
+    }
+  </script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+
+    <nav class="site-nav" aria-label="Site navigation">
+      <ul>
+        <li><a href="../index.html" class="site-nav__link">Home</a></li>
+        <li><a href="../index.html#projects" class="site-nav__link">Projects</a></li>
+        <li><a href="../engineering-notes.html" class="site-nav__link site-nav__link--active">Engineering Notes</a></li>
+        <li><a href="../writing.html" class="site-nav__link">Writing</a></li>
+        <li><a href="../about.html" class="site-nav__link">About</a></li>
+      </ul>
+    </nav>
+
+    <div class="note-header">
+      <a href="../engineering-notes.html" class="note-header__back">← Engineering Notes</a>
+      <h1 class="note-header__title">Go Concurrency Patterns</h1>
+      <p class="note-header__meta">Go and Backend Engineering · last updated Oct 2026</p>
+    </div>
+
+    <main id="main">
+      <article class="note-body">
+
+        <h2>Concept</h2>
+        <p>
+          Go's concurrency model is built around two primitives: goroutines and channels.
+          Goroutines are lightweight, user-space threads managed by the Go runtime.
+          Channels are typed conduits through which goroutines communicate.
+        </p>
+        <p>
+          The guiding philosophy, from the Go team: <em>"Do not communicate by sharing memory;
+          instead, share memory by communicating."</em> In practice this means passing data
+          through channels rather than using shared variables protected by mutexes.
+          Both approaches are valid; the channel model tends to produce clearer code
+          when the design fits it.
+        </p>
+
+        <h2>Problem</h2>
+        <p>
+          Concurrent programs are difficult to reason about. Shared mutable state,
+          race conditions, and deadlocks are the canonical failure modes. Go's concurrency
+          primitives are designed to make correct concurrent code easier to write — not easy,
+          but easier than raw threads and locks.
+        </p>
+        <p>
+          The challenge in backend services is that concurrent work is everywhere:
+          handling multiple HTTP requests simultaneously, processing background jobs,
+          aggregating results from multiple upstream services, or timing out slow operations.
+        </p>
+
+        <h2>How it works</h2>
+        <p>
+          A goroutine is started with the <code>go</code> keyword:
+        </p>
+        <pre><code>go func() {
+    // runs concurrently
+}()</code></pre>
+        <p>
+          Goroutines are cheap. The Go runtime multiplexes them onto OS threads.
+          You can start thousands of goroutines without the overhead of creating thousands
+          of OS threads.
+        </p>
+        <p>
+          Channels allow goroutines to pass values to each other safely:
+        </p>
+        <pre><code>results := make(chan int, 10) // buffered channel
+
+go func() {
+    results <- compute()
+}()
+
+value := <-results // receive from channel</code></pre>
+        <p>
+          Common patterns:
+        </p>
+        <ul>
+          <li>
+            <strong>Fan-out / fan-in</strong> — distribute work across multiple goroutines,
+            collect results through a shared channel.
+          </li>
+          <li>
+            <strong>Worker pool</strong> — a fixed number of goroutines read from a work
+            queue. Prevents unbounded goroutine creation under high load.
+          </li>
+          <li>
+            <strong>Pipeline</strong> — goroutines connected by channels, each stage
+            processing and forwarding data to the next.
+          </li>
+          <li>
+            <strong>Done channel / context cancellation</strong> — signal goroutines to
+            stop by closing a channel or cancelling a <code>context.Context</code>.
+          </li>
+        </ul>
+
+        <h2>Trade-offs</h2>
+        <p>
+          Channels are not always the right tool. For protecting a shared data structure
+          with simple read/write access, a <code>sync.Mutex</code> or
+          <code>sync.RWMutex</code> is often clearer and more efficient than coordinating
+          through channels.
+        </p>
+        <p>
+          Goroutine leaks are a real concern. A goroutine that is never unblocked stays
+          alive for the lifetime of the program. The <code>context</code> package is the
+          standard mechanism for propagating cancellation and ensuring goroutines exit
+          when they are no longer needed.
+        </p>
+        <p>
+          The Go race detector (<code>go test -race</code>) is invaluable. It detects
+          data races at runtime and should be part of any test suite that involves
+          concurrent code.
+        </p>
+
+        <h2>Practical application</h2>
+        <p>
+          In Simple Bank, the HTTP server handles each request in its own goroutine
+          automatically — Go's <code>net/http</code> package does this for you.
+          The interesting concurrency work is in the transfer logic, where multiple
+          concurrent transfers to the same accounts must be coordinated through
+          careful lock ordering at the database level rather than in application code.
+        </p>
+        <p>
+          A worker pool pattern for bounded concurrency:
+        </p>
+        <pre><code>func workerPool(jobs <-chan Job, n int) <-chan Result {
+    results := make(chan Result)
+    var wg sync.WaitGroup
+    for i := 0; i < n; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            for job := range jobs {
+                results <- process(job)
+            }
+        }()
+    }
+    go func() {
+        wg.Wait()
+        close(results)
+    }()
+    return results
+}</code></pre>
+
+        <h2>My understanding</h2>
+        <p>
+          Goroutines are easy to create and easy to misuse. The common mistake is treating
+          them as "fire and forget" and not thinking about when and how they will exit.
+          Every goroutine needs an exit path. If it's waiting on a channel, something
+          must close that channel or send a signal. If it's running a loop, it needs a
+          termination condition.
+        </p>
+        <p>
+          The concurrency model I've found most reliable: use <code>context.Context</code>
+          for cancellation, use channels for communication, and use mutexes only for
+          protecting shared state that doesn't fit the channel model. Keep goroutines
+          short-lived or give them a clear way to exit.
+        </p>
+
+      </article>
+    </main>
+
+    <div class="mt-10 pt-5 border-t border-divider text-sm">
+      <a href="../engineering-notes.html" class="site-link">← Back to Engineering Notes</a>
+    </div>
+    <footer class="mt-8 pt-4 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between gap-2">
+      <p>© 2026 Collins Kimani.</p>
+      <a href="#" class="site-link text-xs">↑ back to top</a>
+    </footer>
+  </div>
+  <script src="../js/main.js"></script>
+</body>
+</html>
