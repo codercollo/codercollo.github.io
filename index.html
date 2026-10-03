@@ -1,398 +1,561 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Collins Kimani — Backend Developer and Go Engineer based in Nairobi, Kenya. I build systems, study how they work, and document what I learn." />
-  <title>Collins Kimani</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Collins Kimani — Backend Developer and Go Engineer based in Nairobi, Kenya. I build systems, study how they work, and document what I learn."
+    />
+    <title>Collins Kimani</title>
 
-  <!-- Tailwind CSS via CDN (no build step required) -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS via CDN (no build step required) -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- HTMX for lightweight interactions -->
-  <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2uodhyzLkVBaE0wFhRiMo+FeynEpUMZqVCF" crossorigin="anonymous" defer></script>
+    <!-- HTMX for lightweight interactions -->
+    <script
+      src="https://unpkg.com/htmx.org@1.9.12"
+      integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2uodhyzLkVBaE0wFhRiMo+FeynEpUMZqVCF"
+      crossorigin="anonymous"
+      defer
+    ></script>
 
-  <!-- Tailwind config — mirrors CSS custom properties -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            ivory:    '#f5f2e9',
-            parchment:'#f4f1e8',
-            charcoal: '#252525',
-            muted:    '#666666',
-            divider:  '#d6d0c5',
-            link:     '#0000cc',
-            visited:  '#551a8b',
-            rust:     '#8b3a0f',
-            forest:   '#2d5a27',
+    <!-- Tailwind config — mirrors CSS custom properties -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ivory: "#f5f2e9",
+              parchment: "#f4f1e8",
+              charcoal: "#252525",
+              muted: "#666666",
+              divider: "#d6d0c5",
+              link: "#0000cc",
+              visited: "#551a8b",
+              rust: "#8b3a0f",
+              forest: "#2d5a27",
+            },
+            fontFamily: {
+              serif: ["Georgia", "Times New Roman", "serif"],
+              sans: ["system-ui", "-apple-system", "Segoe UI", "sans-serif"],
+              mono: ['"Courier New"', "Courier", "monospace"],
+            },
           },
-          fontFamily: {
-            serif: ['Georgia', 'Times New Roman', 'serif'],
-            sans:  ['system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
-            mono:  ['"Courier New"', 'Courier', 'monospace'],
-          },
-        }
-      }
-    }
-  </script>
+        },
+      };
+    </script>
 
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/mascot.css" />
-</head>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/mascot.css" />
+    <link rel="stylesheet" href="css/hero-mascot.css" />
+  </head>
 
-<body class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in">
+  <body
+    class="bg-ivory text-charcoal font-sans leading-relaxed antialiased fade-in"
+  >
+    <!-- Skip to main content -->
+    <a href="#main" class="skip-link">Skip to main content</a>
 
-  <!-- Skip to main content -->
-  <a href="#main" class="skip-link">Skip to main content</a>
-
-  <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
-
-    <!-- ═══════════════════════════════════════════════
+    <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8 sm:py-14">
+      <!-- ═══════════════════════════════════════════════
          SITE NAVIGATION
     ═══════════════════════════════════════════════ -->
-    <nav class="site-nav" aria-label="Site navigation">
-      <ul>
-        <li><a href="index.html" class="site-nav__link site-nav__link--active" aria-current="page">Home</a></li>
-        <li><a href="index.html#projects" class="site-nav__link">Projects</a></li>
-        <li><a href="engineering-notes.html" class="site-nav__link">Engineering Notes</a></li>
-        <li><a href="writing.html" class="site-nav__link">Writing</a></li>
-        <li><a href="about.html" class="site-nav__link">About</a></li>
-      </ul>
-    </nav>
+      <nav class="site-nav" aria-label="Site navigation">
+        <ul>
+          <li>
+            <a
+              href="index.html"
+              class="site-nav__link site-nav__link--active"
+              aria-current="page"
+              >Home</a
+            >
+          </li>
+          <li>
+            <a href="index.html#projects" class="site-nav__link">Projects</a>
+          </li>
+          <li>
+            <a href="engineering-notes.html" class="site-nav__link"
+              >Engineering Notes</a
+            >
+          </li>
+          <li><a href="writing.html" class="site-nav__link">Writing</a></li>
+          <li><a href="about.html" class="site-nav__link">About</a></li>
+        </ul>
+      </nav>
 
-    <!-- ═══════════════════════════════════════════════
+      <!-- ═══════════════════════════════════════════════
          PROFILE HEADER
     ═══════════════════════════════════════════════ -->
-    <header class="mb-10 pb-8 border-b border-divider">
-      <div class="flex flex-col sm:flex-row gap-6 items-start">
-
-        <!-- Profile photo -->
-        <div class="shrink-0">
-          <div class="profile-photo w-24 h-24 sm:w-28 sm:h-28 rounded-sm overflow-hidden border border-divider">
-            <img
-              src="assets/profile/pfp.jpg"
-              alt="Collins Kimani"
-              class="w-full h-full object-cover"
-              width="112"
-              height="112"
-              loading="eager"
-            />
-          </div>
-        </div>
-
-        <!-- Name, title, intro -->
-        <div class="flex-1 min-w-0">
-          <h1 class="font-serif text-2xl sm:text-3xl font-normal text-charcoal mb-0.5">
-            Collins Kimani
-          </h1>
-          <p class="font-mono text-sm text-muted mb-1">@codercollo</p>
-          <p class="text-sm text-muted mb-4">
-            Backend Developer · Go Engineer&nbsp;·&nbsp;Nairobi, Kenya
-          </p>
-
-          <!-- Introduction -->
-          <div class="text-[0.97rem] leading-7 mb-2 max-w-prose space-y-3">
-            <p>
-              <span class="font-mono text-sm text-muted">(•_•)<span class="cursor-blink" aria-hidden="true">█</span></span>
-            </p>
-            <p>
-              Backend engineering with Go.
-            </p>
-            <p>
-              I build systems, study how they work, and document what I learn.
-              I enjoy understanding the fundamentals behind software: how data is stored
-              and protected, how services communicate, how systems handle failure, and
-              how good engineering decisions make software easier to maintain.
-            </p>
+      <header class="mb-10 pb-8 border-b border-divider">
+        <div class="flex flex-col sm:flex-row gap-6 items-start">
+          <!-- Profile photo -->
+          <div class="shrink-0">
+            <div
+              class="profile-photo w-24 h-24 sm:w-28 sm:h-28 rounded-sm overflow-hidden border border-divider"
+            >
+              <img
+                src="assets/profile/pfp.jpg"
+                alt="Collins Kimani"
+                class="w-full h-full object-cover"
+                width="112"
+                height="112"
+                loading="eager"
+              />
+            </div>
           </div>
 
-          <!-- Text CTAs — traditional links, not buttons -->
-          <p class="text-sm mt-4 space-x-4">
-            <a href="#projects" class="site-link">View projects →</a>
-            <a href="engineering-notes.html" class="site-link">Explore engineering notes →</a>
-          </p>
+          <!-- Name, title, intro -->
+          <div class="flex-1 min-w-0">
+            <h1
+              class="font-serif text-2xl sm:text-3xl font-normal text-charcoal mb-0.5"
+            >
+              Collins Kimani
+            </h1>
+            <p class="font-mono text-sm text-muted mb-1">@codercollo</p>
+            <p class="text-sm text-muted mb-4">
+              Backend Developer · Go Engineer&nbsp;·&nbsp;Nairobi, Kenya
+            </p>
 
-          <!-- Contact / social links -->
-          <nav aria-label="Social links" class="mt-4">
-            <ul class="flex flex-wrap gap-x-4 gap-y-1 text-sm list-none p-0 m-0">
-              <li><a href="mailto:collins@example.com" class="site-link">email</a></li>
-              <li><a href="https://github.com/codercollo" class="site-link" target="_blank" rel="noopener noreferrer">github</a></li>
-              <li><a href="https://linkedin.com/in/codercollo" class="site-link" target="_blank" rel="noopener noreferrer">linkedin</a></li>
-              <li><a href="https://x.com/codercollo" class="site-link" target="_blank" rel="noopener noreferrer">x / twitter</a></li>
-            </ul>
-          </nav>
+            <!-- Introduction -->
+            <div class="text-[0.97rem] leading-7 mb-2 max-w-prose space-y-3">
+              <p>
+                <span class="font-mono text-sm text-muted"
+                  >(•_•)<span class="cursor-blink" aria-hidden="true"
+                    >█</span
+                  ></span
+                >
+              </p>
+              <p>Backend engineering with Go.</p>
+              <p>
+                I build systems, study how they work, and document what I learn.
+                I enjoy understanding the fundamentals behind software: how data
+                is stored and protected, how services communicate, how systems
+                handle failure, and how good engineering decisions make software
+                easier to maintain.
+              </p>
+            </div>
+
+            <!-- Text CTAs — traditional links, not buttons -->
+            <p class="text-sm mt-4 space-x-4">
+              <a href="#projects" class="site-link">View projects →</a>
+              <a href="engineering-notes.html" class="site-link"
+                >Explore engineering notes →</a
+              >
+            </p>
+
+            <!-- Contact / social links -->
+            <nav aria-label="Social links" class="mt-4">
+              <ul
+                class="flex flex-wrap gap-x-4 gap-y-1 text-sm list-none p-0 m-0"
+              >
+                <li>
+                  <a href="mailto:itscollinsmaina@gmail.com" class="site-link"
+                    >email</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/codercollo"
+                    class="site-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >github</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://www.linkedin.com/in/collins-kimani-519807411/"
+                    class="site-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >linkedin</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://x.com/collocodes"
+                    class="site-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >x / twitter</a
+                  >
+                </li>
+              </ul>
+            </nav>
+          </div>
         </div>
+      </header>
 
-      </div>
-    </header>
-
-    <!-- ═══════════════════════════════════════════════
+      <!-- ═══════════════════════════════════════════════
          MAIN CONTENT
     ═══════════════════════════════════════════════ -->
-    <main id="main">
+      <main id="main">
+        <!-- ─── Projects ───────────────────────────────── -->
+        <section class="mb-10" id="projects" aria-labelledby="projects-heading">
+          <h2 id="projects-heading" class="section-heading">Projects</h2>
 
-      <!-- ─── Projects ───────────────────────────────── -->
-      <section class="mb-10" id="projects" aria-labelledby="projects-heading">
-        <h2 id="projects-heading" class="section-heading">Projects</h2>
+          <ul class="project-list" id="projects-visible">
+            <li class="project-item">
+              <a
+                href="https://github.com/codercollo/simple-bank"
+                class="project-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Simple Bank
+              </a>
+              <p class="project-desc">
+                A backend banking API focused on account management, transfers,
+                and transactions. The core challenge here is concurrency —
+                ensuring that concurrent transfers don't corrupt account
+                balances, using database transactions and careful lock ordering.
+              </p>
+              <p class="project-tech">Go · PostgreSQL · SQLC · JWT · Docker</p>
+            </li>
 
-        <ul class="project-list" id="projects-visible">
+            <li class="project-item">
+              <a
+                href="https://github.com/codercollo/gotp"
+                class="project-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GoTP
+              </a>
+              <p class="project-desc">
+                An OTP service that sends and verifies SMS codes while helping
+                prevent fraudulent SMS requests. Addresses the engineering
+                problem of idempotency and rate-limiting: how do you ensure an
+                OTP is used exactly once, and that the system can't be abused to
+                send arbitrary SMS traffic?
+              </p>
+              <p class="project-tech">
+                Go · SMS Gateway · Security · Rate Limiting
+              </p>
+            </li>
 
-          <li class="project-item">
-            <a href="https://github.com/codercollo/simple-bank" class="project-link" target="_blank" rel="noopener noreferrer">
-              Simple Bank
-            </a>
-            <p class="project-desc">
-              A backend banking API focused on account management, transfers, and transactions.
-              The core challenge here is concurrency — ensuring that concurrent transfers
-              don't corrupt account balances, using database transactions and careful lock ordering.
-            </p>
-            <p class="project-tech">Go · PostgreSQL · SQLC · JWT · Docker</p>
-          </li>
+            <li class="project-item">
+              <a
+                href="https://github.com/codercollo/rentloop"
+                class="project-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                RentLoop
+              </a>
+              <p class="project-desc">
+                A WhatsApp bot that automates rent collection — reminders,
+                payment tracking, and tenant communication. Practical exercise
+                in integrating with an external messaging API and handling
+                asynchronous message flows reliably.
+              </p>
+              <p class="project-tech">
+                Go · WhatsApp API · Webhooks · Automation
+              </p>
+            </li>
 
-          <li class="project-item">
-            <a href="https://github.com/codercollo/gotp" class="project-link" target="_blank" rel="noopener noreferrer">
-              GoTP
-            </a>
-            <p class="project-desc">
-              An OTP service that sends and verifies SMS codes while helping prevent fraudulent
-              SMS requests. Addresses the engineering problem of idempotency and rate-limiting:
-              how do you ensure an OTP is used exactly once, and that the system can't be abused
-              to send arbitrary SMS traffic?
-            </p>
-            <p class="project-tech">Go · SMS Gateway · Security · Rate Limiting</p>
-          </li>
-
-          <li class="project-item">
-            <a href="https://github.com/codercollo/rentloop" class="project-link" target="_blank" rel="noopener noreferrer">
-              RentLoop
-            </a>
-            <p class="project-desc">
-              A WhatsApp bot that automates rent collection — reminders, payment tracking,
-              and tenant communication. Practical exercise in integrating with an external
-              messaging API and handling asynchronous message flows reliably.
-            </p>
-            <p class="project-tech">Go · WhatsApp API · Webhooks · Automation</p>
-          </li>
-
-          <li class="project-item">
-            <a href="https://github.com/codercollo/url-shortener" class="project-link" target="_blank" rel="noopener noreferrer">
-              URL Shortener
-            </a>
-            <p class="project-desc">
-              A simple URL shortening service. Clean API design, fast redirects, and an
-              exercise in thinking about ID generation, collision avoidance, and keeping
-              a service small and purposeful.
-            </p>
-            <p class="project-tech">Go · REST · PostgreSQL</p>
-          </li>
-
-        </ul>
-
-        <!-- HTMX: load more projects -->
-        <div id="more-projects-container" class="mt-4">
-          <button
-            hx-get="partials/more-projects.html"
-            hx-target="#more-projects-container"
-            hx-swap="outerHTML"
-            hx-indicator="#more-spinner"
-            class="htmx-trigger"
-          >show more projects</button>
-          <span id="more-spinner" class="htmx-indicator text-xs text-muted ml-2">loading…</span>
-        </div>
-      </section>
-
-      <hr class="section-divider" />
-
-      <!-- ─── Engineering Foundations ────────────────── -->
-      <section class="mb-10" aria-labelledby="skills-heading">
-        <h2 id="skills-heading" class="section-heading">Engineering Foundations</h2>
-        <p class="text-sm text-muted mb-5 max-w-prose">
-          Areas I work in and continue to develop. No percentages or ratings —
-          the projects above are a better signal of practical ability.
-        </p>
-
-        <div class="skills-grid">
-
-          <div class="skill-group">
-            <h3 class="skill-group__heading">Backend Development</h3>
-            <ul class="skill-list">
-              <li>Go programming</li>
-              <li>API design</li>
-              <li>Request validation</li>
-              <li>Error handling</li>
-              <li>Concurrency</li>
-              <li>Background processing</li>
-              <li>Software structure</li>
-            </ul>
-          </div>
-
-          <div class="skill-group">
-            <h3 class="skill-group__heading">Data and Persistence</h3>
-            <ul class="skill-list">
-              <li>Relational database design</li>
-              <li>SQL and query design</li>
-              <li>Database transactions</li>
-              <li>Data integrity</li>
-              <li>Isolation levels</li>
-              <li>Schema migrations</li>
-              <li>Data consistency</li>
-            </ul>
-          </div>
-
-          <div class="skill-group">
-            <h3 class="skill-group__heading">Distributed Systems</h3>
-            <ul class="skill-list">
-              <li>Service communication</li>
-              <li>gRPC and REST</li>
-              <li>Microservice architecture</li>
-              <li>Timeouts and retries</li>
-              <li>Fault handling</li>
-              <li>Async processing</li>
-              <li>Service boundaries</li>
-            </ul>
-          </div>
-
-          <div class="skill-group">
-            <h3 class="skill-group__heading">Security and Reliability</h3>
-            <ul class="skill-list">
-              <li>Authentication and authorization</li>
-              <li>Token-based security</li>
-              <li>Input validation</li>
-              <li>Idempotency</li>
-              <li>Integration testing</li>
-              <li>Graceful shutdown</li>
-              <li>Failure handling</li>
-            </ul>
-          </div>
-
-          <div class="skill-group">
-            <h3 class="skill-group__heading">Infrastructure and Operations</h3>
-            <ul class="skill-list">
-              <li>Docker and containerization</li>
-              <li>CI/CD</li>
-              <li>Linux fundamentals</li>
-              <li>Structured logging</li>
-              <li>Observability</li>
-              <li>Production debugging</li>
-              <li>Deployment workflows</li>
-            </ul>
-          </div>
-
-        </div>
-      </section>
-
-      <hr class="section-divider" />
-
-      <!-- ─── Engineering Notes (index) ─────────────── -->
-      <section class="mb-10" aria-labelledby="notes-heading">
-        <h2 id="notes-heading" class="section-heading">Engineering Notes</h2>
-        <p class="text-sm text-muted mb-5 max-w-prose">
-          A personal knowledge index — concepts I encounter while building software,
-          written down to sharpen my understanding.
-          <a href="engineering-notes.html" class="site-link">Browse all notes →</a>
-        </p>
-
-        <!-- Data and Persistence -->
-        <div class="notes-category">
-          <h3 class="notes-category__heading">Data and Persistence</h3>
-          <ul class="notes-list">
-            <li><a href="notes/database-transactions.html" class="site-link">Database Transactions</a></li>
-            <li><a href="notes/isolation-levels.html" class="site-link">Isolation Levels</a></li>
-            <li><a href="notes/database-indexing.html" class="site-link">Database Indexing</a><span class="note-status">— draft</span></li>
-            <li><a href="notes/schema-migrations.html" class="site-link">Schema Migrations</a><span class="note-status">— draft</span></li>
+            <li class="project-item">
+              <a
+                href="https://github.com/codercollo/url-shortener"
+                class="project-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                URL Shortener
+              </a>
+              <p class="project-desc">
+                A simple URL shortening service. Clean API design, fast
+                redirects, and an exercise in thinking about ID generation,
+                collision avoidance, and keeping a service small and purposeful.
+              </p>
+              <p class="project-tech">Go · REST · PostgreSQL</p>
+            </li>
           </ul>
-        </div>
 
-        <!-- Go and Backend -->
-        <div class="notes-category">
-          <h3 class="notes-category__heading">Go and Backend Engineering</h3>
-          <ul class="notes-list">
-            <li><a href="notes/go-concurrency.html" class="site-link">Go Concurrency Patterns</a></li>
-            <li><a href="notes/error-handling.html" class="site-link">Error Handling Strategies</a></li>
-            <li><a href="notes/graceful-shutdown.html" class="site-link">Graceful Shutdown</a></li>
-            <li><a href="notes/integration-testing.html" class="site-link">Integration Testing</a></li>
+          <!-- HTMX: load more projects -->
+          <div id="more-projects-container" class="mt-4">
+            <button
+              hx-get="partials/more-projects.html"
+              hx-target="#more-projects-container"
+              hx-swap="outerHTML"
+              hx-indicator="#more-spinner"
+              class="htmx-trigger"
+            >
+              show more projects
+            </button>
+            <span
+              id="more-spinner"
+              class="htmx-indicator text-xs text-muted ml-2"
+              >loading…</span
+            >
+          </div>
+        </section>
+
+        <hr class="section-divider" />
+
+        <!-- ─── Engineering Foundations ────────────────── -->
+        <section class="mb-10" aria-labelledby="skills-heading">
+          <h2 id="skills-heading" class="section-heading">
+            Engineering Foundations
+          </h2>
+          <p class="text-sm text-muted mb-5 max-w-prose">
+            Areas I work in and continue to develop. No percentages or ratings —
+            the projects above are a better signal of practical ability.
+          </p>
+
+          <div class="skills-grid">
+            <div class="skill-group">
+              <h3 class="skill-group__heading">Backend Development</h3>
+              <ul class="skill-list">
+                <li>Go programming</li>
+                <li>API design</li>
+                <li>Request validation</li>
+                <li>Error handling</li>
+                <li>Concurrency</li>
+                <li>Background processing</li>
+                <li>Software structure</li>
+              </ul>
+            </div>
+
+            <div class="skill-group">
+              <h3 class="skill-group__heading">Data and Persistence</h3>
+              <ul class="skill-list">
+                <li>Relational database design</li>
+                <li>SQL and query design</li>
+                <li>Database transactions</li>
+                <li>Data integrity</li>
+                <li>Isolation levels</li>
+                <li>Schema migrations</li>
+                <li>Data consistency</li>
+              </ul>
+            </div>
+
+            <div class="skill-group">
+              <h3 class="skill-group__heading">Distributed Systems</h3>
+              <ul class="skill-list">
+                <li>Service communication</li>
+                <li>gRPC and REST</li>
+                <li>Microservice architecture</li>
+                <li>Timeouts and retries</li>
+                <li>Fault handling</li>
+                <li>Async processing</li>
+                <li>Service boundaries</li>
+              </ul>
+            </div>
+
+            <div class="skill-group">
+              <h3 class="skill-group__heading">Security and Reliability</h3>
+              <ul class="skill-list">
+                <li>Authentication and authorization</li>
+                <li>Token-based security</li>
+                <li>Input validation</li>
+                <li>Idempotency</li>
+                <li>Integration testing</li>
+                <li>Graceful shutdown</li>
+                <li>Failure handling</li>
+              </ul>
+            </div>
+
+            <div class="skill-group">
+              <h3 class="skill-group__heading">
+                Infrastructure and Operations
+              </h3>
+              <ul class="skill-list">
+                <li>Docker and containerization</li>
+                <li>CI/CD</li>
+                <li>Linux fundamentals</li>
+                <li>Structured logging</li>
+                <li>Observability</li>
+                <li>Production debugging</li>
+                <li>Deployment workflows</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <hr class="section-divider" />
+
+        <!-- ─── Engineering Notes (index) ─────────────── -->
+        <section class="mb-10" aria-labelledby="notes-heading">
+          <h2 id="notes-heading" class="section-heading">Engineering Notes</h2>
+          <p class="text-sm text-muted mb-5 max-w-prose">
+            A personal knowledge index — concepts I encounter while building
+            software, written down to sharpen my understanding.
+            <a href="engineering-notes.html" class="site-link"
+              >Browse all notes →</a
+            >
+          </p>
+
+          <!-- Data and Persistence -->
+          <div class="notes-category">
+            <h3 class="notes-category__heading">Data and Persistence</h3>
+            <ul class="notes-list">
+              <li>
+                <a href="notes/database-transactions.html" class="site-link"
+                  >Database Transactions</a
+                >
+              </li>
+              <li>
+                <a href="notes/isolation-levels.html" class="site-link"
+                  >Isolation Levels</a
+                >
+              </li>
+              <li>
+                <a href="notes/database-indexing.html" class="site-link"
+                  >Database Indexing</a
+                ><span class="note-status">— draft</span>
+              </li>
+              <li>
+                <a href="notes/schema-migrations.html" class="site-link"
+                  >Schema Migrations</a
+                ><span class="note-status">— draft</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Go and Backend -->
+          <div class="notes-category">
+            <h3 class="notes-category__heading">Go and Backend Engineering</h3>
+            <ul class="notes-list">
+              <li>
+                <a href="notes/go-concurrency.html" class="site-link"
+                  >Go Concurrency Patterns</a
+                >
+              </li>
+              <li>
+                <a href="notes/error-handling.html" class="site-link"
+                  >Error Handling Strategies</a
+                >
+              </li>
+              <li>
+                <a href="notes/graceful-shutdown.html" class="site-link"
+                  >Graceful Shutdown</a
+                >
+              </li>
+              <li>
+                <a href="notes/integration-testing.html" class="site-link"
+                  >Integration Testing</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <!-- API and Service Design -->
+          <div class="notes-category">
+            <h3 class="notes-category__heading">API and Service Design</h3>
+            <ul class="notes-list">
+              <li>
+                <a href="notes/api-design.html" class="site-link">API Design</a>
+              </li>
+              <li>
+                <a href="notes/service-communication.html" class="site-link"
+                  >Service Communication</a
+                >
+              </li>
+              <li>
+                <a href="notes/api-versioning.html" class="site-link"
+                  >API Versioning</a
+                ><span class="note-status">— draft</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <hr class="section-divider" />
+
+        <!-- ─── Writing ────────────────────────────────── -->
+        <section class="mb-10" aria-labelledby="writing-heading">
+          <h2 id="writing-heading" class="section-heading">Writing</h2>
+          <p class="text-sm text-muted mb-4 italic">
+            Longer reflections on implementation experiences and engineering
+            decisions.
+            <a href="writing.html" class="site-link">All writing →</a>
+          </p>
+
+          <ul class="writing-list">
+            <li class="writing-item">
+              <a href="#" class="site-link"
+                >Thinking in goroutines: a practical mental model</a
+              >
+              <span class="writing-meta">— draft</span>
+            </li>
+            <li class="writing-item">
+              <a href="#" class="site-link"
+                >Why I keep reaching for SQLC over ORMs</a
+              >
+              <span class="writing-meta">— draft</span>
+            </li>
+            <li class="writing-item">
+              <a href="#" class="site-link"
+                >Building a small OTP system from scratch</a
+              >
+              <span class="writing-meta">— draft</span>
+            </li>
           </ul>
-        </div>
+        </section>
 
-        <!-- API and Service Design -->
-        <div class="notes-category">
-          <h3 class="notes-category__heading">API and Service Design</h3>
-          <ul class="notes-list">
-            <li><a href="notes/api-design.html" class="site-link">API Design</a></li>
-            <li><a href="notes/service-communication.html" class="site-link">Service Communication</a></li>
-            <li><a href="notes/api-versioning.html" class="site-link">API Versioning</a><span class="note-status">— draft</span></li>
+        <hr class="section-divider" />
+
+        <!-- ─── Elsewhere ──────────────────────────────── -->
+        <section class="mb-10" aria-labelledby="elsewhere-heading">
+          <h2 id="elsewhere-heading" class="section-heading">Elsewhere</h2>
+
+          <ul class="elsewhere-list">
+            <li>
+              <a
+                href="https://github.com/codercollo"
+                class="site-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                >GitHub</a
+              >
+              — where the code lives.
+            </li>
+            <li>
+              <a
+                href="https://www.linkedin.com/in/collins-kimani-519807411/"
+                class="site-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                >LinkedIn</a
+              >
+              — professional details, occasionally updated.
+            </li>
+            <li>
+              <a
+                href="https://x.com/collocodes"
+                class="site-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                >X / Twitter</a
+              >
+              — sporadic thoughts on Go and software.
+            </li>
+            <li>
+              <a href="mailto:collins@example.com" class="site-link">Email</a>
+              — the best way to reach me.
+            </li>
           </ul>
-        </div>
+        </section>
+      </main>
 
-      </section>
-
-      <hr class="section-divider" />
-
-      <!-- ─── Writing ────────────────────────────────── -->
-      <section class="mb-10" aria-labelledby="writing-heading">
-        <h2 id="writing-heading" class="section-heading">Writing</h2>
-        <p class="text-sm text-muted mb-4 italic">
-          Longer reflections on implementation experiences and engineering decisions.
-          <a href="writing.html" class="site-link">All writing →</a>
-        </p>
-
-        <ul class="writing-list">
-          <li class="writing-item">
-            <a href="#" class="site-link">Thinking in goroutines: a practical mental model</a>
-            <span class="writing-meta">— draft</span>
-          </li>
-          <li class="writing-item">
-            <a href="#" class="site-link">Why I keep reaching for SQLC over ORMs</a>
-            <span class="writing-meta">— draft</span>
-          </li>
-          <li class="writing-item">
-            <a href="#" class="site-link">Building a small OTP system from scratch</a>
-            <span class="writing-meta">— draft</span>
-          </li>
-        </ul>
-      </section>
-
-      <hr class="section-divider" />
-
-      <!-- ─── Elsewhere ──────────────────────────────── -->
-      <section class="mb-10" aria-labelledby="elsewhere-heading">
-        <h2 id="elsewhere-heading" class="section-heading">Elsewhere</h2>
-
-        <ul class="elsewhere-list">
-          <li>
-            <a href="https://github.com/codercollo" class="site-link" target="_blank" rel="noopener noreferrer">GitHub</a>
-            — where the code lives.
-          </li>
-          <li>
-            <a href="https://linkedin.com/in/codercollo" class="site-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-            — professional details, occasionally updated.
-          </li>
-          <li>
-            <a href="https://x.com/codercollo" class="site-link" target="_blank" rel="noopener noreferrer">X / Twitter</a>
-            — sporadic thoughts on Go and software.
-          </li>
-          <li>
-            <a href="mailto:collins@example.com" class="site-link">Email</a>
-            — the best way to reach me.
-          </li>
-        </ul>
-      </section>
-
-    </main>
-
-    <!-- ═══════════════════════════════════════════════
+      <!-- ═══════════════════════════════════════════════
          FOOTER
     ═══════════════════════════════════════════════ -->
-    <footer class="mt-12 pt-6 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-      <p>© 2026 Collins Kimani. Built with curiosity.</p>
-      <a href="#" class="site-link text-xs" aria-label="Back to top of page">↑ back to top</a>
-    </footer>
+      <footer
+        class="mt-12 pt-6 border-t border-divider text-sm text-muted flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
+      >
+        <p>© 2026 Collins Kimani. Built with curiosity.</p>
+        <a href="#" class="site-link text-xs" aria-label="Back to top of page"
+          >↑ back to top</a
+        >
+      </footer>
+    </div>
+    <!-- /container -->
 
-  </div><!-- /container -->
-
-  <script src="js/main.js"></script>
-  <script src="js/mascot.js" defer></script>
-</body>
+    <script src="js/main.js"></script>
+    <script src="js/mascot.js" defer></script>
+    <script src="js/hero-mascot.js" defer></script>
+  </body>
 </html>

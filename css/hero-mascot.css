@@ -1,0 +1,84 @@
+/*
+ * Collins Kimani — hero-mascot.css
+ *
+ * One-time hero entrance animation for the Go Gopher mascot.
+ * Completely separate from mascot.css — do not merge.
+ * GPU-friendly: only transform + opacity are animated.
+ * pointer-events: none throughout — never blocks clicks.
+ */
+
+/* ── Reduced-motion: nothing is rendered ─────────────────────── */
+/* (JS also checks this before creating any element) */
+@media (prefers-reduced-motion: reduce) {
+  .hero-mascot-stage,
+  .hero-mascot-img {
+    display: none !important;
+  }
+}
+
+/* ── Stage: full-width fixed strip, invisible to input ─────────── */
+/*
+  The stage is a thin fixed bar docked at the bottom of the viewport.
+  Its height is just enough to accommodate the gopher; overflow is
+  visible upward so the bounce arcs show above the bar naturally.
+  z-index 200 keeps it above page content but below any modal overlay.
+*/
+.hero-mascot-stage {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;           /* JS repositions this to align with hero border */
+  height: 0;
+  pointer-events: none;
+  z-index: 200;
+  overflow: visible;
+}
+
+/* ── Pop-out clip wrapper ──────────────────────────────────────── */
+/*
+  Clips the gopher so only the part above the hero's border line
+  is ever visible during the pop-out phase.
+  After pop-out the JS switches to fixed positioning for the bounce.
+*/
+.hero-mascot-clip {
+  position: absolute;
+  bottom: 0;
+  left: 50%;               /* JS overrides left to centre under hero */
+  transform: translateX(-50%);
+  width: 120px;
+  height: 130px;
+  overflow: hidden;        /* the "burrow" clip */
+  pointer-events: none;
+}
+
+/* ── The gopher image itself ───────────────────────────────────── */
+.hero-mascot-img {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100px;            /* desktop default */
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+
+  /*
+    mix-blend-mode: multiply blends the JPEG white background into
+    the warm-cream page (#f5f2e9 / ivory), making it look cut-out.
+    If you later swap in a transparent PNG, remove this property.
+  */
+  mix-blend-mode: multiply;
+
+  will-change: transform, opacity;
+}
+
+/* ── Mobile: smaller gopher ────────────────────────────────────── */
+@media (max-width: 599px) {
+  .hero-mascot-clip {
+    width: 80px;
+    height: 90px;
+  }
+  .hero-mascot-img {
+    width: 64px;
+  }
+}
