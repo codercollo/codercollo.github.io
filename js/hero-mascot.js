@@ -38,7 +38,7 @@
 
   /* ── Config ─────────────────────────────────────────────────────── */
 
-  const IMAGE_SRC      = 'assets/mascot/mascot.jpeg';
+  const IMAGE_SRC      = 'assets/mascot/mascot.png';
   const SESSION_KEY    = 'heroMascotPlayed';
 
   // Desktop
@@ -98,14 +98,19 @@
   const wait = (ms) => new Promise((res) => setTimeout(res, ms));
 
   /**
-   * Wraps element.animate() in a Promise.
-   * Resolves on finish, rejects on cancel.
+   * Wraps a GSAP tween in a Promise so it integrates cleanly with the
+   * existing async/await orchestration.  Only this helper and the four
+   * phase functions below were changed — everything else is untouched.
    */
-  function runAnim(el, keyframes, options) {
-    return new Promise((resolve, reject) => {
-      const anim = el.animate(keyframes, options);
-      anim.onfinish = resolve;
-      anim.oncancel = reject;
+  function gsapPromise(target, vars) {
+    return new Promise((resolve) => {
+      gsap.to(target, { ...vars, onComplete: resolve });
+    });
+  }
+
+  function gsapFromToPromise(target, fromVars, toVars) {
+    return new Promise((resolve) => {
+      gsap.fromTo(target, fromVars, { ...toVars, onComplete: resolve });
     });
   }
 
@@ -120,6 +125,7 @@
     // Clip container — creates the "burrow" overflow clip during pop-out
     const clip = document.createElement('div');
     clip.className = 'hero-mascot-clip';
+    clip.style.width = 'clamp(56px, 13vw, 110px)';
 
     // Image
     const img = document.createElement('img');
@@ -184,160 +190,297 @@
     });
   }
 
-  /* ── Animation phases ───────────────────────────────────────────── */
+  /* ── Billowing SVG Dust Clouds ─────────────────────────────────── */
 
-  /** Phase 1 — Pop out from behind the hero border line. */
-  async function phasePopOut(img) {
-    img.style.willChange = 'transform, opacity';
-    await runAnim(
-      img,
-      [
-        { transform: 'translateY(100%)', opacity: 0 },
-        { transform: 'translateY(0%)',   opacity: 1 },
-      ],
-      {
-        duration: POP_DURATION_MS,
-        easing:   'cubic-bezier(.34,1.56,.64,1)',
-        fill:     'forwards',
-      }
-    );
-    img.style.transform  = 'translateY(0%)';
-    img.style.opacity    = '1';
-    img.style.willChange = '';
-  }
+  /**
+   * Builds an organic multi-lobed SVG cloud puff with layered billows.
+   * mix-blend-mode: multiply and subtle blur ensure a seamless natural blend
+   * against the ivory/parchment background.
+   */
+  function createCloudSVG() {
+    const wrap = document.createElement('div');
+    wrap.className = 'hero-dust-cloud';
+    wrap.style.position      = 'absolute';
+    wrap.style.bottom        = '0px';
+    wrap.style.width         = '76px';
+    wrap.style.height        = '48px';
+    wrap.style.pointerEvents = 'none';
+    wrap.style.mixBlendMode  = 'multiply';
+    wrap.style.filter        = 'blur(0.8px)';
+    wrap.style.zIndex        = '199';
 
-  /** Phase 2 — Tiny head-tilt wiggle while paused. */
-  async function phaseWiggle(img) {
-    img.style.willChange = 'transform';
-    await runAnim(
-      img,
-      [
-        { transform: 'translateY(0%) rotate(0deg)'   },
-        { transform: 'translateY(0%) rotate(-5deg)', offset: 0.2 },
-        { transform: 'translateY(0%) rotate(5deg)',  offset: 0.5 },
-        { transform: 'translateY(0%) rotate(-3deg)', offset: 0.75 },
-        { transform: 'translateY(0%) rotate(0deg)'   },
-      ],
-      {
-        duration: PAUSE_MS,
-        easing:   'ease-in-out',
-        fill:     'forwards',
-      }
-    );
-    img.style.transform  = 'translateY(0%) rotate(0deg)';
-    img.style.willChange = '';
+    wrap.innerHTML = `
+      <svg viewBox="0 0 92 56" width="100%" height="100%" style="overflow: visible; display: block;" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer organic billow: warm parchment dust tone -->
+        <path d="M 6,52 C 1,42 4,28 14,24 C 11,13 22,5 34,7 C 42,1 56,1 66,9 C 76,5 88,15 85,28 C 92,35 91,47 82,52 Z" 
+              fill="#c5beaf" opacity="0.85" />
+        <!-- Inner cloud layer for natural puff volume -->
+        <path d="M 16,50 C 11,40 16,29 26,25 C 28,17 38,11 48,13 C 55,7 66,11 71,19 C 78,25 77,39 70,50 Z" 
+              fill="#ded7cb" opacity="0.9" />
+        <!-- Core cloud billow -->
+        <circle cx="45" cy="31" r="17" fill="#b8af9f" opacity="0.55" />
+        <!-- Small trailing puff at edge -->
+        <circle cx="16" cy="38" r="9"  fill="#c5beaf" opacity="0.75" />
+        <circle cx="75" cy="39" r="10" fill="#c5beaf" opacity="0.75" />
+      </svg>
+    `;
+    return wrap;
   }
 
   /**
-   * Phase 3 — Bounce across screen left → right.
-   *
-   * The gopher is detached from the clip container so it can move freely
-   * across the full viewport width.  Keyframes are built in px (measured
-   * at runtime) so they adapt to any screen size.
-   *
-   * Horizontal overflow is blocked by `overflow-x: clip` on the stage (CSS)
-   * so no horizontal scrollbar ever appears.
+   * Spawns 2 soft, organic SVG cloud puffs that swell outward at the left
+   * and right of the burrow line, plus accompanying motes, dissipating softly
+   * into the background.
    */
-  async function phaseBounce(stage, clip, img, isMobile) {
-    const hops   = isMobile ? MOBILE_HOPS   : HOP_COUNT;
-    const peakVh = isMobile ? MOBILE_HEIGHT : HOP_HEIGHT_VH;
-    const hopMs  = isMobile ? MOBILE_HOP_MS : HOP_DURATION_MS;
+  function spawnBillowingDustClouds(stage, centerX, mascotWidth = 80) {
+    if (!stage) return;
+    const halfWidth = mascotWidth * 0.44;
 
-    // ── Measure positions before detaching ──────────────────────────
-    const clipRect  = clip.getBoundingClientRect();
+    // ── 1. Left Billowing Cloud ─────────────────────────────────────
+    const leftCloud = createCloudSVG();
+    leftCloud.style.left            = (centerX - halfWidth - 56) + 'px';
+    leftCloud.style.transformOrigin = 'bottom right';
+    stage.appendChild(leftCloud);
+
+    gsap.set(leftCloud, { scale: 0.18, x: 14, y: 4, opacity: 0 });
+    gsap.timeline({ onComplete: () => leftCloud.remove() })
+      .to(leftCloud, {
+        scale:    1.12,
+        x:        -32,
+        y:        -14,
+        opacity:  0.88,
+        duration: 0.36,
+        ease:     'power2.out',
+      })
+      .to(leftCloud, {
+        scale:    1.45,
+        x:        -62,
+        y:        -24,
+        opacity:  0,
+        duration: 0.68,
+        ease:     'power1.out',
+      });
+
+    // ── 2. Right Billowing Cloud (flipped horizontally) ─────────────
+    const rightCloud = createCloudSVG();
+    rightCloud.style.left            = (centerX + halfWidth - 18) + 'px';
+    rightCloud.style.transformOrigin = 'bottom left';
+    stage.appendChild(rightCloud);
+
+    gsap.set(rightCloud, { scale: 0.18, scaleX: -0.18, x: -14, y: 4, opacity: 0 });
+    gsap.timeline({ onComplete: () => rightCloud.remove() })
+      .to(rightCloud, {
+        scale:    1.12,
+        scaleX:   -1.12,
+        x:        32,
+        y:        -14,
+        opacity:  0.88,
+        duration: 0.36,
+        ease:     'power2.out',
+      })
+      .to(rightCloud, {
+        scale:    1.45,
+        scaleX:   -1.45,
+        x:        62,
+        y:        -24,
+        opacity:  0,
+        duration: 0.68,
+        ease:     'power1.out',
+      });
+
+    // ── 3. Dispersing dust motes ─────────────────────────────────────
+    const moteColors = ['#b8af9f', '#c5beaf', '#ded7cb'];
+    for (let i = 0; i < 8; i++) {
+      const isLeft = i % 2 === 0;
+      const dot    = document.createElement('span');
+      const size   = gsap.utils.random(3.5, 7);
+
+      dot.style.position      = 'absolute';
+      dot.style.bottom        = '0px';
+      dot.style.width         = size + 'px';
+      dot.style.height        = size + 'px';
+      dot.style.borderRadius  = '50%';
+      dot.style.background    = moteColors[i % moteColors.length];
+      dot.style.pointerEvents = 'none';
+      dot.style.mixBlendMode  = 'multiply';
+      dot.style.zIndex        = '199';
+
+      const originX = isLeft
+        ? centerX - halfWidth + gsap.utils.random(-8, 4)
+        : centerX + halfWidth + gsap.utils.random(-4, 8);
+
+      dot.style.left = originX + 'px';
+      stage.appendChild(dot);
+
+      gsap.set(dot, { scale: 0.4, opacity: gsap.utils.random(0.7, 0.95) });
+
+      const xDist = isLeft ? gsap.utils.random(-22, -55) : gsap.utils.random(22, 55);
+      const yRise = gsap.utils.random(-10, -28);
+
+      gsap.to(dot, {
+        x:        xDist,
+        y:        yRise,
+        scale:    gsap.utils.random(1.2, 1.8),
+        opacity:  0,
+        duration: gsap.utils.random(0.55, 0.85),
+        ease:     'power2.out',
+        onComplete: () => dot.remove(),
+      });
+    }
+  }
+
+  /* ── Quiet animation acts (A → B → C, run sequentially) ─────────── */
+
+  /**
+   * Act A — Gentle Float-In & Drift.
+   * Mascot fades + rises softly from behind the border, bobs twice with
+   * a slow breathing idle, then drifts right and fades out.
+   * No bouncing, no rotation, no squash — pure calm.
+   */
+  async function actA(stage, clip, img) {
     const stageRect = stage.getBoundingClientRect();
+    const clipRect  = clip.getBoundingClientRect();
+    const stageW    = stageRect.width || vpWidth();
     const imgW      = img.getBoundingClientRect().width || 80;
+    let   startLeft = Math.max(0, clipRect.left - stageRect.left);
 
-    // Where the gopher's left edge is, relative to the stage
-    let startLeft = clipRect.left - stageRect.left;
+    // ── Soft rise from clip ──────────────────────────────────────────
+    img.style.willChange = 'transform, opacity';
+    gsap.set(img, { y: '100%', opacity: 0 });
 
-    // Clamp so the gopher always starts fully on-screen (never negative)
-    startLeft = Math.max(0, startLeft);
+    // Spawn billowing dust clouds as mascot breaches the burrow line
+    setTimeout(() => spawnBillowingDustClouds(stage, startLeft + imgW / 2, imgW), 200);
 
-    // ── Detach from clip, re-parent to stage ────────────────────────
+    await gsapPromise(img, {
+      y:        '0%',
+      opacity:  1,
+      duration: 1.1,
+      ease:     'power2.out',
+    });
+
+    // ── Detach from clip so it can move freely ───────────────────────
     clip.removeChild(img);
     if (clip.parentNode === stage) stage.removeChild(clip);
     stage.appendChild(img);
+    img.style.position = 'absolute';
+    img.style.left     = startLeft + 'px';
+    img.style.bottom   = '0';
+    img.style.top      = 'auto';
+    img.style.opacity  = '1';
+    gsap.set(img, { y: 0 });
 
-    img.style.position  = 'absolute';
-    img.style.left      = startLeft + 'px';
-    img.style.bottom    = '0';
-    img.style.top       = 'auto';
-    img.style.transform = 'none';
-    img.style.opacity   = '1';
-    img.style.willChange = 'transform, left, opacity';
-
-    // ── Build keyframes ──────────────────────────────────────────────
-    const vw = vpWidth();
-    const vh = vpHeight();
-
-    // End: right edge of the viewport (overflow-x:clip stops the scrollbar)
-    const endLeft = vw - imgW;   // exit right at the viewport edge
-
-    const totalDx  = endLeft - startLeft;
-    const keyframes = [];
-
-    for (let i = 0; i <= hops; i++) {
-      const progress = i / hops;
-      const leftPx   = startLeft + totalDx * progress;
-
-      // Energy decay: first hop tallest, last hop ~35% height
-      const energy  = 1 - (i / hops) * 0.65;
-      const peakPx  = (peakVh / 100) * vh * energy;
-
-      const isLanding = i > 0;
-      const rot       = i < hops ? 8 : 0;
-
-      // Landing keyframe — squash on ground contact
-      const landingTransform = isLanding
-        ? `translateY(0px) scaleX(1.12) scaleY(0.88) rotate(${rot}deg)`
-        : 'translateY(0px) scaleX(1) scaleY(1) rotate(0deg)';
-
-      keyframes.push({ offset: progress, left: leftPx + 'px', transform: landingTransform });
-
-      // Arc-peak keyframe at the midpoint between this landing and the next
-      if (i < hops) {
-        const nextProgress = (i + 1) / hops;
-        const midProgress  = (progress + nextProgress) / 2;
-        const midLeftPx    = startLeft + totalDx * midProgress;
-
-        keyframes.push({
-          offset:    midProgress,
-          left:      midLeftPx + 'px',
-          transform: `translateY(-${peakPx}px) scaleX(0.9) scaleY(1.12) rotate(${rot * 0.5}deg)`,
-        });
-      }
-    }
-
-    keyframes.sort((a, b) => a.offset - b.offset);
-
-    await runAnim(img, keyframes, {
-      duration: hops * hopMs,
-      easing:   'linear',
-      fill:     'forwards',
+    // ── Gentle breathing bob (two slow cycles) ───────────────────────
+    img.style.willChange = 'transform';
+    await new Promise((resolve) => {
+      gsap.timeline({ onComplete: resolve })
+        .to(img, { y: -10, duration: 0.9, ease: 'sine.inOut' })
+        .to(img, { y:   0, duration: 0.9, ease: 'sine.inOut' })
+        .to(img, { y:  -8, duration: 0.8, ease: 'sine.inOut' })
+        .to(img, { y:   0, duration: 0.8, ease: 'sine.inOut' });
     });
 
-    img.style.willChange = '';
-  }
-
-  /** Phase 4 — Roll/hop off the right edge, remove from DOM. */
-  async function phaseExit(img) {
-    img.style.willChange = 'transform, opacity';
-    await runAnim(
-      img,
-      [
-        { transform: 'translateY(0px) rotate(0deg)',    opacity: 1 },
-        { transform: 'translateY(-30px) rotate(20deg)', opacity: 1, offset: 0.4 },
-        { transform: 'translateY(10px)  rotate(45deg)', opacity: 0 },
-      ],
-      {
-        duration: 350,
-        easing:   'ease-in',
-        fill:     'forwards',
-      }
-    );
+    // ── Drift right + fade out ───────────────────────────────────────
+    img.style.willChange = 'transform, left, opacity';
+    await gsapPromise(img, {
+      left:    (stageW - imgW) + 'px',
+      opacity: 0,
+      duration: 2.2,
+      ease:    'power1.inOut',
+    });
     img.style.willChange = '';
     img.remove();
+  }
+
+  /**
+   * Act B — Peek & Retreat.
+   * A fresh mascot rises just enough to show its head over the border,
+   * holds with a slow side-to-side sway, then sinks back down quietly.
+   * The mascot never crosses the screen.
+   */
+  async function actB(stage) {
+    const clip2 = document.createElement('div');
+    clip2.className = 'hero-mascot-clip';
+    clip2.style.width = 'clamp(56px, 13vw, 110px)';
+    const img2  = document.createElement('img');
+    img2.className = 'hero-mascot-img';
+    img2.src       = IMAGE_SRC;
+    img2.alt       = '';
+    img2.draggable = false;
+    gsap.set(img2, { y: '100%', opacity: 0 });
+    clip2.appendChild(img2);
+    stage.appendChild(clip2);
+
+    // ── Gentle rise to peek (shows ~55% of image) ────────────────────
+    img2.style.willChange = 'transform, opacity';
+
+    // Spawn billowing dust clouds as mascot emerges to peek
+    const stageW = stage.getBoundingClientRect().width || vpWidth();
+    const imgW2  = img2.getBoundingClientRect().width || 80;
+    setTimeout(() => spawnBillowingDustClouds(stage, stageW / 2, imgW2), 180);
+
+    await gsapPromise(img2, { y: '45%', opacity: 1, duration: 1.0, ease: 'power1.out' });
+
+    // ── Slow side-to-side sway ───────────────────────────────────────
+    img2.style.willChange = 'transform';
+    await new Promise((resolve) => {
+      gsap.timeline({ onComplete: resolve })
+        .to(img2, { rotation:  4, duration: 0.9, ease: 'sine.inOut' })
+        .to(img2, { rotation: -4, duration: 1.1, ease: 'sine.inOut' })
+        .to(img2, { rotation:  2, duration: 0.8, ease: 'sine.inOut' })
+        .to(img2, { rotation:  0, duration: 0.6, ease: 'sine.inOut' });
+    });
+
+    // ── Sink back below border ───────────────────────────────────────
+    img2.style.willChange = 'transform, opacity';
+    await gsapPromise(img2, { y: '100%', opacity: 0, duration: 1.0, ease: 'power2.in' });
+    img2.style.willChange = '';
+    clip2.remove();
+  }
+
+  /**
+   * Act C — Slow Glide (single smooth sine-arc).
+   * A fresh mascot fades in at the left, rides one wide gentle sine arc
+   * across the full width, and fades out at the right edge.
+   * No individual hops — one continuous, wave-like motion.
+   */
+  async function actC(stage) {
+    const stageW = stage.getBoundingClientRect().width || vpWidth();
+    const vh     = vpHeight();
+
+    const img3  = document.createElement('img');
+    img3.className = 'hero-mascot-img';
+    img3.src       = IMAGE_SRC;
+    img3.alt       = '';
+    img3.draggable = false;
+    img3.style.position = 'absolute';
+    img3.style.left     = '0px';
+    img3.style.bottom   = '0';
+    img3.style.top      = 'auto';
+    stage.appendChild(img3);
+    const imgW = img3.getBoundingClientRect().width || 80;
+    gsap.set(img3, { opacity: 0, y: 0 });
+
+    // ── Single smooth wave-arc glide ─────────────────────────────────
+    img3.style.willChange = 'transform, left, opacity';
+    await new Promise((resolve) => {
+      gsap.timeline({ onComplete: resolve })
+        .to(img3, {
+          left:    (stageW / 2 - imgW / 2) + 'px',
+          y:       -(vh * 0.12),
+          opacity: 1,
+          duration: 2.0,
+          ease:    'sine.inOut',
+        })
+        .to(img3, {
+          left:    (stageW - imgW) + 'px',
+          y:       0,
+          opacity: 0,
+          duration: 2.0,
+          ease:    'sine.inOut',
+        });
+    });
+    img3.style.willChange = '';
+    img3.remove();
   }
 
   /* ── Main orchestrator ──────────────────────────────────────────── */
@@ -355,19 +498,27 @@
     // Mark played for this session
     try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (_) {}
 
-    // Determine mobile breakpoint based on actual viewport width
-    const isMobile = vpWidth() < 600;
-
     suppressScrollPeek();
 
     const { stage, clip, img } = buildElements();
     positionStage(stage);
 
     try {
-      await phasePopOut(img);
-      await phaseWiggle(img);
-      await phaseBounce(stage, clip, img, isMobile);
-      await phaseExit(img);
+      // ── Act A: Gentle Float-In & Drift ──────────────────────────────
+      await actA(stage, clip, img);
+
+      // Brief breath between acts
+      await wait(600);
+
+      // ── Act B: Peek & Retreat ────────────────────────────────────────
+      await actB(stage);
+
+      // Brief breath between acts
+      await wait(500);
+
+      // ── Act C: Slow Scroll-Along ─────────────────────────────────────
+      await actC(stage);
+
     } catch (_) {
       // Animation cancelled (element removed externally) — clean up silently
       try { img.remove();   } catch (_) {}
@@ -396,6 +547,10 @@
 
   window.addEventListener('resize',            onResize, { passive: true });
   window.addEventListener('orientationchange', onResize, { passive: true });
+  window.addEventListener('scroll', () => {
+    const stage = document.querySelector('.hero-mascot-stage');
+    if (stage) positionStage(stage);
+  }, { passive: true });
 
   /* ── Entry point: fire after full page load + delay ─────────────── */
 

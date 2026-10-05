@@ -28,7 +28,7 @@
    * IMAGE_SRC — path relative to the page being loaded.
    * Works for all pages in the root directory.
    */
-  const IMAGE_SRC = 'assets/mascot/mascot.jpeg';
+  const IMAGE_SRC = 'assets/mascot/mascot.png';
 
   /**
    * SECTION_CONFIGS — each entry maps a CSS selector to the side
